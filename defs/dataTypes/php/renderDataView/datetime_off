@@ -1,0 +1,23 @@
+<script type="text/javascript" src="/includes/js/jscalendar-1.0/calendar_stripped.js"></script>
+<script type="text/javascript" src="/includes/js/jscalendar-1.0/lang/calendar-en.js"></script>
+<script type="text/javascript" src="/includes/js/jscalendar-1.0/calendar-setup_stripped.js"></script>
+<?php
+	$tmp_date_format = "Y-m-d H:i:s";
+	$tmp_date = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)};
+	if (is_null($tmp_date)) {
+		$tmp_date = date($tmp_date_format);
+	}
+?>
+						<input class="inputbox" id="${tr.fV($property.name)}" name="${tr.fV($property.name)}" size="10" value="<?php echo $tmp_date ?>" onchange="this.form.virgo_changed.value='T'">
+						<img id="${tr.fV($property.name)}Button" name="${tr.fV($property.name)}Button" alt="calendar" src="/templates/system/images/calendar.png" class="calendar"/>
+<script type="text/javascript">
+Calendar.setup(
+    {
+      inputField  : "${tr.fV($property.name)}",         // ID of the input field
+      ifFormat    : "%Y-%m-%d",    // the date format
+      showsTime      :    true,
+      timeFormat     :    "24",
+      button      : "${tr.fV($property.name)}Button"       // ID of the button
+    }
+  );
+</script>  

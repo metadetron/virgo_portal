@@ -1,0 +1,49 @@
+<?php
+	if (!defined('JS_INCLUDED_DATEPICKER')) {
+		define('JS_INCLUDED_DATEPICKER', 1);
+		$locale = setlocale(LC_ALL,"0");
+		if (isset($locale) && trim($locale) != "") {
+			$lang = substr($locale, 0, 2);
+		} else {
+			$lang = "en";
+		}
+?>
+<script src="<?php echo $_SESSION['portal_url'] ?>/libraries/jQueryUI/development-bundle/ui/i18n/jquery.ui.datepicker-<?php echo $lang ?>.js"></script>
+<?php
+	}
+?>
+<?php
+	$tmp_date_format = "Y-m-d";
+	$tmp_date = $result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}();
+?>
+						<div class="date" style="display: inline;">
+							<input 
+								type="text" 
+								class="inputbox" 
+								style="" 
+								id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+								name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+								size="10" 
+								value="<?php echo $tmp_date ?>" 
+								onchange="this.form.virgo_changed.value='T'"
+<?php
+	if (isset($tabIndex) && $tabIndex > 0) {
+?>
+								tabindex="<?php echo $tabIndex ?>"
+<?php
+	}
+?>
+								>
+##							<input type="button" id="${tr.fV($property.name)}Button" name="${tr.fV($property.name)}Button" alt="calendar" class="calendar" style="vertical-align: middle; height: 16px;"/>
+						</div>
+<script type="text/javascript">
+## glupi IE8
+$(function(){ 
+#set ($hash = '#')
+  $("${hash}${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>").datepicker({dateFormat: "yy-mm-dd"});
+});
+</script>  
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+

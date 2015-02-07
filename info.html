@@ -1,0 +1,96 @@
+#if (!$singleEntity || $singleEntity == ${tr.f_v($entity.name)}) 
+----- project_info.html -----
+<table border="1">
+	<tr>
+		<th>
+			Encja
+		</th>
+		<th>
+			Wlasciwosci
+		</th>
+		<th>
+			Rodzicow<br>(nie slownikow)
+		</th>
+		<th>
+			Dzieci
+		</th>
+		<th>
+			Rodzice
+		</th>
+		<th>
+			Przodkowie
+		</th>
+	</tr>
+#foreach( $entity in $application.entities )
+#if (!$singleEntity || $singleEntity == ${tr.f_v($entity.name)}) 
+#if (!$entity.dictionary)
+	<tr>
+		<td>
+			$entity.name
+#set ($workflow = "FALSE")
+#foreach( $relation in $entity.childRelations )
+#if ($relation.parentEntity.dictionary)
+#foreach( $relation2 in $relation.parentEntity.childRelations )
+#if ($relation2.parentEntity.name == $relation.parentEntity.name)
+#set ($workflow = "TRUE")
+#end
+#end
+#end
+#end
+#if ($workflow == "TRUE")
+			&nbsp;WF
+#end
+		</td>
+		<td>
+			$entity.properties.size()
+		</td>
+		<td>
+##			$entity.childRelations.size()
+#set ($count = 0)
+#foreach( $relation in $entity.childRelations )
+#if ($relation.parentEntity.dictionary)
+#set ($count = $count + 0)
+#else
+#set ($count = $count + 1)
+#end
+#end
+##			&nbsp;($count)
+			$count
+		</td>
+		<td>
+			$entity.parentRelations.size()
+#set ($children = '')
+#foreach( $relation in $entity.parentRelations )
+#if ($relation.childEntity.dictionary)
+#set ($children = $children + 0)
+#else
+#set ($children = "$children '$relation.childEntity.name'")
+#end
+#end
+			&nbsp;($children)
+		</td>
+		<td>
+			$entity.childRelations.size()
+#set ($parents = '')
+#foreach( $relation in $entity.childRelations )
+#if ($relation.parentEntity.dictionary)
+#set ($parents = $parents + 0)
+#else
+#set ($parents = "$parents '$relation.parentEntity.name'")
+#end
+#end
+			&nbsp;($parents)
+		</td>
+		<td>
+## #foreach ($ancestor in $entity.allAncestors)
+##	$ancestor.name $ancestor.getChildLevel("$entity.name")<br/>
+## #end
+		</td>
+	<tr>
+#end
+#end
+#end
+</table>
+
+#end
+

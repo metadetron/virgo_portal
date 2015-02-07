@@ -1,0 +1,48 @@
+#if ($tinemce_initialized == 'false')
+<script type="text/javascript">
+var CKEDITOR_BASEPATH = "<?php echo $_SESSION['portal_url'] ?>/libraries/ckeditor/";
+</script>
+<script type="text/javascript" src="<?php echo $_SESSION['portal_url'] ?>/libraries/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="<?php echo $_SESSION['portal_url'] ?>/libraries/ckeditor/adapters/jquery.js"></script>
+#set ($tinemce_initialized = 'true')
+#end
+<textarea 
+##	style="border: yellow 1 solid;"
+	style="width:100%; height:550px;"
+	class="inputbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	cols="75" 
+	rows="20" 
+	onchange="this.form.virgo_changed.value='T'"	
+<?php
+	if (isset($tabIndex) && $tabIndex > 0) {
+?>
+							tabindex="<?php echo $tabIndex ?>"
+<?php
+	}
+?>
+><?php echo htmlentities($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}(), ENT_QUOTES, "UTF-8") ?></textarea>
+<script type="text/javascript">
+		var editor = CKEDITOR.instances['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'];
+		if (editor) { 
+			editor.destroy(true); 
+		}
+#set ($hash = '#')
+  $('${hash}${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>').ckeditor({
+## UWAGA! Tu byl niezly kwas! Jak nie bylo tego slasha przed pytajnikiem, to nie dzialal upload, bo 
+## 		  Apache to przekierowywal z GET na POST i tracil zalacznik $_FILES!
+		filebrowserUploadUrl: '<?php echo $_SESSION['portal_url'] ?>/?virgo_upload=true'
+<?php
+		if (P('show_toolbar_${tr.f_v($property.name)}', '1') == '0') {
+?>
+		,toolbarStartupExpanded: false
+<?php
+		}
+?>
+  });
+</script>  
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+

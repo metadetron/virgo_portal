@@ -1,0 +1,21 @@
+<input  
+	style="border: yellow 1 solid;" 
+	class="inputbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	onchange="this.form.virgo_changed.value='T'"
+	value="<?php echo $result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() ?>"
+	size="5"
+	maxlength="5"
+<?php
+	if (isset($tabIndex) && $tabIndex > 0) {
+?>
+							tabindex="<?php echo $tabIndex ?>"
+<?php
+	}
+?>
+/>
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_lat_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+

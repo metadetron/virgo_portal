@@ -1,0 +1,27 @@
+----- field_order.php -----
+#set ($hash = "#")
+#set ($dollar = "$")
+#foreach( $entity in $application.entities )
+#if (!$singleEntity || $singleEntity == ${tr.f_v($entity.name)}) 
+${hash}${hash} ${tr.f_v($entity.name)}
+${hash}${hash} utworz pliki modules_project/fieldOrder/${tr.f_v($entity.name)}/table.vm, /create.vm itp...
+${hash}${hash} ${hash}set ($temp = $orderedFieldsNames.add("F:jakas_etykieta"))
+${hash}${hash} ${hash}set ($temp = $orderedFieldsNames.add("F:virgo_close"))
+
+#foreach ($tmpRelation in $entity.childRelations)
+#if ($tmpRelation.identifying)
+${hash}set (${dollar}temp = ${dollar}orderedFieldsNames.add("R:${tr.f_v($tmpRelation.parentEntity.name)}${tr.f_v($tmpRelation.name)}"))
+#end
+#end
+
+#foreach($property in $entity.properties)
+${hash}set (${dollar}temp = ${dollar}orderedFieldsNames.add("P:${tr.f_v($property.name)}"))
+#end
+
+#foreach ($tmpRelation in $entity.childRelations)
+#if (!$tmpRelation.identifying)
+${hash}set (${dollar}temp = ${dollar}orderedFieldsNames.add("R:${tr.f_v($tmpRelation.parentEntity.name)}${tr.f_v($tmpRelation.name)}"))
+#end
+#end
+#end
+#end

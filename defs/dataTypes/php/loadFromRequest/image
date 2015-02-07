@@ -1,0 +1,110 @@
+################################################################################
+## There are following possibilities:
+## 
+## 1. No image in database and no image uploaded. Deleted checkbox not set.
+##	TO BE DONE: blob must be untouched.
+## 
+## 2. No image in database and an image uploaded. Deleted checkbox not set.
+##	TO BE DONE: blob must be filled with content of the file.
+## 
+## 3. An image in database and no image uploaded. Deleted checkbox not set.
+##	TO BE DONE: blob must be untouched.
+## 
+## 4. An image in database and an image uploaded. Deleted checkbox not set.
+##	TO BE DONE: blob must be filled with content of the file.
+##
+## 5. No image in database and no image uploaded. Deleted checkbox set.
+##	TO BE DONE: blob must be untouched.
+## 
+## 6. No image in database and an image uploaded. Deleted checkbox set.
+##	TO BE DONE: blob must be filled with content of the file.
+## 
+## 7. An image in database and no image uploaded. Deleted checkbox set.
+##	TO BE DONE: blob must be set tu null.
+## 
+## 8. An image in database and an image uploaded. Deleted checkbox set.
+##	TO BE DONE: blob must be filled with content of the file.
+## 
+################################################################################
+##	So we have 3 possibilities:
+## 		- blob untouched when no file uploaded
+##		- blob filled with file when file was uploaded
+## 		- blob set to null when there was a blob and no image uploaded
+##			and chechbox checked
+################################################################################
+## 	How to determine situations:
+## 		- no file uploaded	- $userfile['error'] == 4
+## 		- file uploaded 	- $userfile['error'] != 4
+## 		- blob present in DB 	- image_present = true
+################################################################################
+## 	How to implement functionalities:
+## 		- blob untouched	- set blob to array, so it will not be 
+##						updated
+## 		- blob filled with file - set blob to file content. Delete cache!
+## 		- blob set to null 	- set blob to null. Delete cache!
+################################################################################
+		$imageDeleted = R('${tr.fV($entity.prefix)}_${tr.fV($property.name)}_virgo_image_deleted_' . $this->${entity.prefix}_id);
+		$imagePresent = R('${tr.fV($entity.prefix)}_${tr.fV($property.name)}_virgo_image_present_' . $this->${entity.prefix}_id);
+		if (isset($_FILES['${tr.fV($entity.prefix)}_${tr.fV($property.name)}_' . $this->${entity.prefix}_id])) {
+			$userfile = $_FILES['${tr.fV($entity.prefix)}_${tr.fV($property.name)}_' . $this->${entity.prefix}_id];
+		} else {
+			$userfile['error'] = 4;
+		}
+		if ($userfile['error'] == 4) {
+			if ($imagePresent == 'true' && $imageDeleted == 'on') {
+## set blob to null		
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_blob = null;
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_file_name = null;
+#deleteCache()				
+			} else {
+## set blob to an array so it will not be updated
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_blob = array(1);
+			}
+		} else {
+## set blob to file content		
+			if ($userfile['error'] || $userfile['size'] < 1) {
+				$errors = array(
+					0=>"There is no error, the file uploaded with success",
+					1=>"The uploaded file exceeds the upload_max_filesize directive in php.ini",
+					2=>"The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form",
+					3=>"The uploaded file was only partially uploaded",
+					4=>"No file was uploaded",
+					6=>"Missing a temporary folder"); 
+				L("File was not uploaded correctly: " . $errors[$userfile['error']], '', 'ERROR');		 
+			} else {
+				$tmp_src   = $userfile['tmp_name'];
+				$content = file_get_contents($tmp_src, FILE_BINARY); //$_FILES['photo']['tmp_name']);
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_file_name = $userfile['name'];
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_blob = $content;
+			
+				$scaleHeight = P('scale_image_to_height_${tr.f_v($property.name)}', "");
+				$scaleWidth = P('scale_image_to_height_${tr.f_v($property.name)}', "");
+					
+				if ($scaleHeight != "" && $scaleWidth != "") {
+					$thumbnailWidth = (int)$scaleWidth;
+					$thumbnailHeight = (int)$scaleHeight;
+					$src_image = imagecreatefromstring($content);
+					$imageX = imagesx($src_image);
+					$imageY = imagesy($src_image);
+					$factorX = $imageX / $thumbnailWidth;
+					$factorY = $imageY / $thumbnailHeight;
+					$factor = max($factorX, $factorY);
+					$thumbnailWidth = $imageX / $factor;
+					$thumbnailHeight = $imageY / $factor;
+					$dst_image = imagecreatetruecolor($thumbnailWidth, $thumbnailHeight);
+					imagecopyresized($dst_image, $src_image, 0, 0, 0, 0, $thumbnailWidth, $thumbnailHeight, $imageX, $imageY);
+					unlink($tmp_src);
+					imagejpeg($dst_image, $tmp_src, 85);
+					$content = file_get_contents($tmp_src, FILE_BINARY);
+					imagedestroy($dst_image);
+				}
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_file_name = $userfile['name'];
+				$this->${entity.prefix}_${tr.f_v($property.name)}_virgo_blob = $content;
+#deleteCache()				
+			}
+		}
+## foreach (get_object_vars( $this ) as $k => $v) {
+## 	error_log("DEBUG: " . $k, 0);
+## }
+	
+

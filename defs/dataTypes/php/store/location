@@ -1,0 +1,17 @@
+## <?php
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat)) {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat = ? ,";
+				$types .= "d";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat;
+			} else {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat = NULL ,";				
+			}
+
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long)) {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long = ? ,";
+				$types .= "d";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long;
+			} else {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long = NULL ,";				
+			}
+## ?>

@@ -1,0 +1,8 @@
+<?php
+	if (isset($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id) && isset($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) { 
+?>
+<a class="inputbox readonly" href="<?php echo $result${tr.FV($entity.name)}->get${tr.FV($property.name)}FileUrl() ?>"><?php echo $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name ?></a>
+<?php
+	} 
+?>
+

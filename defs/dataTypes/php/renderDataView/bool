@@ -1,0 +1,35 @@
+#*
+<input type="checkbox" 
+	style="border: yellow 1 solid;" 
+	class="inputbox checkbox readonly" 
+	id="${tr.fV($property.name)}" 
+	name="${tr.fV($property.name)}"
+	onchange="this.form.virgo_changed.value='T'"
+	readonly="readonly" 	
+<?php
+	if ($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} == 1) {
+?>
+	checked="checked"
+<?php
+	}
+?>
+/>
+
+*#
+
+<span 
+	class="inputbox readonly" 
+	id="${tr.fV($property.name)}"
+>
+<?php
+	if (is_null($result${tr.FV($entity.name)}->get${tr.FV($property.name)}()) || $result${tr.FV($entity.name)}->get${tr.FV($property.name)}() == 2) {
+		$booleanValue = T("NO_DATA");
+	} elseif ($result${tr.FV($entity.name)}->get${tr.FV($property.name)}() == 1) {
+		$booleanValue = T("YES");
+	} elseif ($result${tr.FV($entity.name)}->get${tr.FV($property.name)}() === "0") {
+		$booleanValue = T("NO");
+	}
+?>
+	<?php echo $booleanValue ?>
+</span>
+

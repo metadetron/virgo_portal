@@ -1,0 +1,8 @@
+## <?php
+			if (isset($this->${entity.prefix}_${tr.f_v($property.name)}_location_lat)) {
+				$query = $query . " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat, ";
+			}
+			if (isset($this->${entity.prefix}_${tr.f_v($property.name)}_location_long)) {
+				$query = $query . " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long, ";
+			}
+## ?>

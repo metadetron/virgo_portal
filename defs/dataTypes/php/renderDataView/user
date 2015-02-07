@@ -1,0 +1,1 @@
+<input readonly="readonly" value="<?php echo virgoUser::lookup($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}) ?>" style="border: yellow 1 solid;" class="inputbox readonly">

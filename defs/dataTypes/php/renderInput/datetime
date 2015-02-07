@@ -1,0 +1,40 @@
+<?php
+	$locale = setlocale(LC_ALL,"0");
+	if (isset($locale) && trim($locale) != "") {
+		$lang = substr($locale, 0, 2);
+	} else {
+		$lang = "en";
+	}
+	if (!defined('JS_INCLUDED_DATEPICKER')) {
+		define('JS_INCLUDED_DATEPICKER', 1);
+?>
+<script src="<?php echo $_SESSION['portal_url'] ?>/libraries/jQueryUI/development-bundle/ui/i18n/jquery.ui.datepicker-<?php echo $lang ?>.js"></script>
+<?php
+	}
+	if (!defined('JS_INCLUDED_TIMEPICKER')) {
+		define('JS_INCLUDED_TIMEPICKER', 1);
+?>
+<script src="<?php echo $_SESSION['portal_url'] ?>/libraries/jQuery.timepicker/jquery-ui-timepicker-addon.js"></script>
+<?php
+	}
+?>
+<?php
+	$tmp_date_format = "Y-m-d H:i:s";
+	$tmp_date = $result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}();
+?>
+						<input class="inputbox" id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" size="16" value="<?php echo $tmp_date ?>" onchange="this.form.virgo_changed.value='T'">
+##						<img id="${tr.fV($property.name)}Button" name="${tr.fV($property.name)}Button" alt="calendar" src="<?php echo $live_site ?>/templates/system/images/calendar.png" class="calendar" style="vertical-align:middle;"/>
+<script type="text/javascript">
+## glupi IE8
+var functionToCall = functionsToCallAfterLoad<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'];
+if (typeof(functionToCall) === 'undefined') {
+	functionsToCallAfterLoad<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'] = function () {
+#set ($hash = '#')
+  $("${hash}${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>").datetimepicker({dateFormat: "yy-mm-dd", hour: 12, minute: 00});
+	};
+}
+</script>  
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+

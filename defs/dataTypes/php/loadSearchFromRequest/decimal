@@ -1,0 +1,9 @@
+		$dataTypeCriteria["from"] = R('virgo_search_${tr.fV($property.name)}_from');
+		if (!is_numeric($dataTypeCriteria["from"])) {
+			$dataTypeCriteria["from"] = null;
+		}
+		$dataTypeCriteria["to"] = R('virgo_search_${tr.fV($property.name)}_to');
+		if (!is_numeric($dataTypeCriteria["to"])) {
+			$dataTypeCriteria["to"] = null;
+		}
+

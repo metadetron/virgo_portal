@@ -1,0 +1,2 @@
+		var $virgo_search_${entity.prefix}_${tr.f_v($property.name)} = null;
+

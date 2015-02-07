@@ -1,0 +1,5 @@
+## <?php
+			$uniqnessWhere = $uniqnessWhere . ' AND ${entity.prefix}_${tr.f_v($property.name)} = ? ';
+			$types .= "d";
+			$values[] = $this->${entity.prefix}_${tr.f_v($property.name)};
+## ?>

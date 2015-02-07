@@ -1,0 +1,8 @@
+<?php
+	$googleMapZoom = P('google_map_zoom_${tr.f_v($property.name)}', 14);
+	$googleMapSizeHeight = P('google_map_height_${tr.f_v($property.name)}', 230);
+	$googleMapSizeWidth = P('google_map_width_${tr.f_v($property.name)}', 300);
+	$googleMapType = P('google_map_type_${tr.f_v($property.name)}', 'satellite'); //roadmap, satellite, hybrid, and terrain
+?>
+## czy tu nie powinna byc zoomowalna mapa a nie taki statyczny obrazek?
+<img class="inputbox readonly" src="http://maps.google.com/maps/api/staticmap?zoom=<?php echo $googleMapZoom ?>&size=<?php echo $googleMapSizeWidth ?>x<?php echo $googleMapSizeHeight ?>&markers=<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat ?>,<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long ?>&maptype=<?php echo $googleMapType ?>&sensor=false">

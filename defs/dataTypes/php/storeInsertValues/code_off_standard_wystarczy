@@ -1,0 +1,9 @@
+## <?php
+			$query = 
+				$query . 
+				(isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}) ?
+					" '" . mysql_real_escape_string($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}) . "', "
+					:
+					" NULL, "
+				);
+## ?>

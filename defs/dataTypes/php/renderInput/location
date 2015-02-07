@@ -1,0 +1,75 @@
+	<table style="display: inline;">
+	  <tr>
+	    <td colspan="2">
+	      <div id="map_canvas_${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}" style="width: 300px; height:230px">This version of virgo portlets does not support ajax for Google Maps. Please disable it.</div>
+<style type="text/css">
+  #map_canvas_${tr.fV($property.entity.prefix)}_${tr.fV($property.name)} { height: 100% }
+</style>
+<script type="text/javascript">
+  function initialize_${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}<?php echo $_SESSION['current_portlet_object_id'] ?>() {
+    var myOptions = {
+      center: new google.maps.LatLng(<?php echo isset($result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_lat) ? $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_lat : "52.069167" ?>,<?php echo isset($result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_long) ? $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_long : "19.480556" ?>),
+      zoom: <?php echo isset($result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_lat) ? "12" : "5" ?>,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    var map = new google.maps.Map(document.getElementById("map_canvas_${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}"), myOptions);
+
+    google.maps.event.addListener(map,'click',function(event) {
+      document.getElementById('${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_lat_<?php echo $result${tr.FV($property.entity.name)}->${tr.fV($property.entity.prefix)}_id ?>').value = event.latLng.lat();
+      document.getElementById('${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_long_<?php echo $result${tr.FV($property.entity.name)}->${tr.fV($property.entity.prefix)}_id ?>').value = event.latLng.lng();
+    });
+  }
+var functionToCall = functionsToCallAfterLoad<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'];
+if (typeof(functionToCall) === 'undefined') {
+	functionsToCallAfterLoad<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'] = function () {
+		if (typeof google === 'object' && typeof google.maps === 'object') {
+			initialize_${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}<?php echo $_SESSION['current_portlet_object_id'] ?>();
+		} else {
+			var script = document.createElement("script");
+		  	script.type = "text/javascript";
+  			script.src = "http://maps.googleapis.com/maps/api/js?sensor=false&callback=initialize_${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}<?php echo $_SESSION['current_portlet_object_id'] ?>";
+  			document.body.appendChild(script);
+  		}
+	};
+}
+## var functionToCall2 = functionsToCallBeforeSubmit<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'];
+## if (typeof(functionToCall2) === 'undefined') {
+## 	functionsToCallBeforeSubmit<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'] = function () {
+## 		var functionToCall3 = functionsToCallAfterLoad<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'];
+## 		if (typeof(functionToCall3) === 'undefined') {
+## 			delete functionsToCallAfterLoad<?php echo $_SESSION['current_portlet_object_id'] ?>['${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>'];
+## 		}
+## 	};
+## }
+</script>
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>
+<input  
+	style="border: yellow 1 solid;" 
+	class="inputbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_lat_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_lat_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	onchange="this.form.virgo_changed.value='T'"
+	value="<?php echo $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_lat ?>"
+	
+/>
+	    </td>
+	    <td>
+<input  
+	style="border: yellow 1 solid;" 
+	class="inputbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_long_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_long_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	onchange="this.form.virgo_changed.value='T'"
+	value="<?php echo $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_location_long ?>"
+	
+/>
+	    </td>
+	  </tr>
+	</table>
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_location_lat_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+

@@ -1,0 +1,38 @@
+    						<select 
+							class="inputbox " 
+							id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+							name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+							onchange="this.form.virgo_changed.value='T';
+							"
+<?php
+	if (isset($tabIndex) && $tabIndex > 0) {
+?>
+							tabindex="<?php echo $tabIndex ?>"
+<?php
+	}
+?>							
+						>
+<?php
+			if (is_null($limit_menu) || trim($limit_menu) == "") {
+?>
+    							<option value=""></option>
+<?php
+			}
+?>
+<?php
+			$query = "SELECT item.id as id, concat(menu.title, concat(' - ', item.name)) as label FROM jos_menu item, jos_menu_types menu WHERE menu.menutype = item.menutype AND item.published = 1 AND item.access = 0 ";
+#selectRows()			
+			foreach ($rows as $row) {
+?>	
+							<option value="<?php echo $row->id ?>" 
+<?php 
+				echo ($row->id == $result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() ? "selected='selected'" : "");
+?>
+							>
+								<?php echo $row->label ?>
+							</option>
+<?php
+			} 
+?>
+    						</select>
+

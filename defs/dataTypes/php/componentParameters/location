@@ -1,0 +1,10 @@
+		<param name="google_map_zoom_${tr.f_v($property.name)}" type="text" default="16" label="Google map zoom ${tr.fv($property.name)}" description="Google map zoom (1 - 21) ${tr.fv($property.name)}" size="2" />
+		<param name="google_map_width_${tr.f_v($property.name)}" type="text" default="400" label="Google map widt ${tr.fv($property.name)}h" description="Google map width in pixels ${tr.fv($property.name)}" size="4" />
+		<param name="google_map_height_${tr.f_v($property.name)}" type="text" default="400" label="Google map height ${tr.fv($property.name)}" description="Google map height in pixels ${tr.fv($property.name)}" size="4" />
+		<param name="google_map_type_${tr.f_v($property.name)}" default="hybrid" type="list" label="Google map type ${tr.fv($property.name)}" description="Google map type ${tr.fv($property.name)}">
+			<option value="hybrid">Hybrid</option>
+			<option value="roadmap">Roadmap</option>
+			<option value="satellite">Satellite</option>
+			<option value="terrain">Terrain</option>
+		</param>
+

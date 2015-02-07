@@ -1,0 +1,1 @@
+$this->${entity.prefix}_${tr.f_v($property.name)}_location_lat == null || $this->${entity.prefix}_${tr.f_v($property.name)}_location_long == null

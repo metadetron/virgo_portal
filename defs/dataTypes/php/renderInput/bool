@@ -1,0 +1,57 @@
+#getParamValue($property.customProperty "Binary")
+#if ($virgoWartosc != "")
+#set ($binary = $virgoWartosc)
+#end
+#if ($binary == "1")
+<input type="checkbox" 
+	style="border: yellow 1 solid;" 
+	class="inputbox checkbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	onchange="this.form.virgo_changed.value='T'"
+<?php
+	if ($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() == "on" || $result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() == 1 ) {
+?>
+	checked="checked"
+<?php
+	}
+?>
+/>
+#else
+<select class="inputbox" id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+<?php
+	if (isset($tabIndex) && $tabIndex > 0) {
+?>
+							tabindex="<?php echo $tabIndex ?>"
+<?php
+	}
+	$hint = TE('HINT_${tr.F_V($property.entity.name)}_${tr.F_V($property.name)}');
+	if (isset($hint)) {
+?>
+							title="<?php echo $hint ?>"
+<?php
+	}
+?>
+>
+	<option value="1" <?php echo ($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() == 1 ? "selected='selected'" : "") ?>>#text("'YES'")</option>
+	<option value="0" <?php echo ($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() === "0" ? "selected='selected'" : "") ?>>#text("'NO'")</option>
+	<option value="2" <?php echo (is_null($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}()) || $result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() == 2 ? "selected='selected'" : "") ?>>#text("'NO_DATA'")</option>
+</select>
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+#end
+<?php
+	if (isset($hint)) {
+?>						
+<script type="text/javascript">
+#set ($hash = '#')
+$('${hash}${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>').qtip({position: {
+		my: 'left center',
+		at: 'right center'
+	}});
+</script>						
+<?php
+	}
+?>						
+

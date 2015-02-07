@@ -1,0 +1,12 @@
+## <?php
+			if (!is_null($this->${entity.prefix}_${tr.f_v($property.name)}) && trim($this->${entity.prefix}_${tr.f_v($property.name)}) != "") {
+				if (preg_match('/^\d\d:\d\d$/', $this->${entity.prefix}_${tr.f_v($property.name)}) == 0) {
+					return T('INCORRECT_TIME', '${tr.F_V($property.name)}');
+				}
+				$godzina = (int)substr($this->${entity.prefix}_${tr.f_v($property.name)}, 0, 2);
+				$minuta = (int)substr($this->${entity.prefix}_${tr.f_v($property.name)}, 4);
+				if ($godzina > 23 || $minuta > 59) {
+					return T('INCORRECT_TIME', '${tr.F_V($property.name)}');
+				}
+			}
+## ?>

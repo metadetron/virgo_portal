@@ -1,0 +1,27 @@
+## <?php
+		if (!is_array($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) {
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob = ? ,";
+				$types .= "s";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob;
+			} else {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob = NULL ,";				
+			}
+
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name)) {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name = ? ,";
+				$types .= "s";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name;
+			} else {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name = NULL ,";				
+			}
+
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_size)) {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_size = ? ,";
+				$types .= "i";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_size;
+			} else {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_size = NULL ,";				
+			}
+		}
+## ?>

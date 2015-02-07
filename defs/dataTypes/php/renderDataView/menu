@@ -1,0 +1,13 @@
+<?php
+		if (!is_null($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)})) {
+			$query = "SELECT concat(menu.title, concat(' - ', item.name)) as label FROM jos_menu item, jos_menu_types menu WHERE menu.menutype = item.menutype AND item.id = " . $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)};
+#selectResult()
+			$menuLabel = "";
+			if (sizeof($result) > 0) {
+				$menuLabel = $result[0];
+			}
+		} else {
+			$menuLabel = "";
+		}
+?>
+<input readonly="readonly" size="40" value="<?php echo $menuLabel ?>" id="${tr.fV($property.name)}" name="${tr.fV($property.name)}" class="inputbox readonly">

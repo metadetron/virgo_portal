@@ -1,0 +1,34 @@
+#if ($property.customProperty)
+#set ($und = $property.customProperty.indexOf('_'))
+#set ($param1 = $property.customProperty.substring(0, $und))
+#set ($und = $und + 1)
+#set ($param2 = $property.customProperty.substring($und))
+##
+#set ($und = $param1.indexOf(':'))
+#set ($nazwa1 = $param1.substring(0, $und))
+#set ($und = $und + 1)
+#set ($wartosc1 = $param1.substring($und))
+
+#set ($und = $param2.indexOf(':'))
+#set ($nazwa2 = $param2.substring(0, $und))
+#set ($und = $und + 1)
+#set ($wartosc2 = $param2.substring($und))
+##
+#if ($nazwa1 == "Width")
+#set ($areaWidth = $wartosc1)
+#set ($areaHeight = $wartosc2)
+#else
+#set ($areaWidth = $wartosc2)
+#set ($areaHeight = $wartosc1)
+#end
+##
+#else
+#set ($areaWidth = 48)
+#set ($areaHeight = 5)
+#end
+<div 
+	style="border: yellow 1 solid; display: inline-block;" 
+	class="inputbox readonly ${tr.f_v($property.name)}" 
+	id="${tr.fV($property.name)}" 
+><?php echo htmlentities($result${tr.FV($entity.name)}->get${tr.FV($property.name)}(), ENT_QUOTES, "UTF-8") ?></div>
+

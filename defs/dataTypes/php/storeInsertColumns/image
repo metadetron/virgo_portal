@@ -1,0 +1,7 @@
+## <?php
+		if (!is_array($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) {		
+			$query = $query . " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob,";
+			$query = $query . " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name,";
+			$query = $query . " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_size,";
+		}
+## ?>

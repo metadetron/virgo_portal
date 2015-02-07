@@ -1,0 +1,7 @@
+<?php
+			$options = array();
+			$options["1"] = "Yes";
+			$options["0"] = "No";
+?>
+#paramList("show_toolbar_${tr.f_v($property.name)}" "")
+

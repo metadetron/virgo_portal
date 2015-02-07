@@ -1,0 +1,9 @@
+## <?php
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)})) {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} = ? ,";
+				$types .= "d";
+				$values[] = number_format($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}, 2, '.', '');
+			} else {
+				$query .= " ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} = NULL ,";				
+			}
+## ?>

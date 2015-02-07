@@ -1,0 +1,45 @@
+#if ($calendar_rendered == 'false')
+#set ($calendar_rendered = 'true')
+<script src="<?php echo $_SESSION['portal_url'] ?>/libraries/jQueryUI/js/jquery-ui-1.8.21.custom.min.js"></script>
+<link href="<?php echo $_SESSION['portal_url'] ?>/libraries/jQueryUI/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+#end
+<?php
+	$tmp_date_format = "Y-m-d H:i:s";
+	$tmp_date = isset($dataTypeCriteria["from"]) ? $dataTypeCriteria["from"] : "";
+?>
+						<input 
+							type="text"
+							class="inputbox" 
+							id="virgo_search_${tr.fV($property.name)}_from" 
+							name="virgo_search_${tr.fV($property.name)}_from" 
+							size="20" 
+							value="<?php echo $tmp_date ?>" 
+						>
+<script type="text/javascript">
+## glupi IE8
+$(function(){ 
+#set ($hash = '#')
+  $("${hash}virgo_search_${tr.fV($property.name)}_from").datepicker({dateFormat: "yy-mm-dd"});
+});
+</script>
+						&nbsp;-&nbsp;
+<?php
+	$tmp_date_format = "Y-m-d H:i:s";
+	$tmp_date = isset($dataTypeCriteria["to"]) ? $dataTypeCriteria["to"] : "";
+?>
+						<input 
+							type="text"
+							class="inputbox" 
+							id="virgo_search_${tr.fV($property.name)}_to" 
+							name="virgo_search_${tr.fV($property.name)}_to" 
+							size="20" 
+							value="<?php echo $tmp_date ?>" 
+						>
+<script type="text/javascript">
+## glupi IE8
+$(function(){ 
+#set ($hash = '#')
+  $("${hash}virgo_search_${tr.fV($property.name)}_to").datepicker({dateFormat: "yy-mm-dd"});
+});
+</script>
+

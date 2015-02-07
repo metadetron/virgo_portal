@@ -1,0 +1,7 @@
+## <?php
+			if (!is_null($this->${entity.prefix}_${tr.f_v($property.name)}) && trim($this->${entity.prefix}_${tr.f_v($property.name)}) != "") {
+				if (!is_numeric($this->${entity.prefix}_${tr.f_v($property.name)})) {
+					return T('INCORRECT_NUMBER', '${tr.F_V($property.name)}', $this->${entity.prefix}_${tr.f_v($property.name)});
+				}
+			}
+## ?>

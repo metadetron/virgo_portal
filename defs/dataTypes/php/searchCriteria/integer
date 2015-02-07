@@ -1,0 +1,3 @@
+		public $virgo_search_${entity.prefix}_${tr.f_v($property.name)}_from = null;
+		public $virgo_search_${entity.prefix}_${tr.f_v($property.name)}_to = null;
+

@@ -1,0 +1,3 @@
+$this->${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob = $row['${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob'];
+$this->${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name = $row['${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name'];
+$this->${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_virgo_size = $row['${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_virgo_size'];

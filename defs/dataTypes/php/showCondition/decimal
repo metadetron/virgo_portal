@@ -1,0 +1,8 @@
+			$conditionFrom = $dataTypeCriteria["from"];
+			if (!is_null($conditionFrom) && trim($conditionFrom) != "") { 
+				$renderCriteria = $renderCriteria . " >= " . $conditionFrom;
+			}
+			$conditionTo = $dataTypeCriteria["to"];
+			if (!is_null($conditionTo) && trim($conditionTo) != "") { 
+				$renderCriteria = $renderCriteria . " =< " . $conditionTo;
+			}			

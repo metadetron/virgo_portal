@@ -1,0 +1,19 @@
+	$tmpValue = null;
+	$tmpValue = R('${tr.fV($entity.prefix)}_${tr.fV($property.name)}_location_lat_' . $this->${entity.prefix}_id);
+	if (!is_null($tmpValue)) {
+		if (trim($tmpValue == "")) {
+			$this->${entity.prefix}_${tr.f_v($property.name)}_location_lat = null;
+		} else {
+			$this->${entity.prefix}_${tr.f_v($property.name)}_location_lat = $tmpValue;
+		}
+	}
+	$tmpValue = null;
+	$tmpValue = R('${tr.fV($entity.prefix)}_${tr.fV($property.name)}_location_long_' . $this->${entity.prefix}_id);
+	if (!is_null($tmpValue)) {
+		if (trim($tmpValue == "")) {
+			$this->${entity.prefix}_${tr.f_v($property.name)}_location_long = null;
+		} else {
+			$this->${entity.prefix}_${tr.f_v($property.name)}_location_long = $tmpValue;
+		}
+	}
+

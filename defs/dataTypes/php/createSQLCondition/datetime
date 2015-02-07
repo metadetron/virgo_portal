@@ -1,0 +1,12 @@
+			$conditionFrom = $dataTypeCriteria["from"];
+			$conditionTo = $dataTypeCriteria["to"];
+			if (!is_null($conditionFrom) && trim($conditionFrom) != "") { 
+				$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} >= ? ";
+				$types .= "s";
+				$values[] = $conditionFrom;				
+			}
+			if (!is_null($conditionTo) && trim($conditionTo) != "") { 
+				$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} <= ? ";
+				$types .= "s";
+				$values[] = $conditionTo;				
+			}			

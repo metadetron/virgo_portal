@@ -1,0 +1,2 @@
+				$queryString = $queryString . ", ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob ";
+

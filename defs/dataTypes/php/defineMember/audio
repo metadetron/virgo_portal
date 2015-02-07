@@ -1,0 +1,4 @@
+  		var $${entity.prefix}_${tr.f_v($property.name)}_virgo_blob = null;
+		var $${entity.prefix}_${tr.f_v($property.name)}_virgo_file_name = null;   
+		var $${entity.prefix}_${tr.f_v($property.name)}_virgo_size = null;     
+

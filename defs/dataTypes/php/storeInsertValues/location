@@ -1,0 +1,16 @@
+## <?php
+		if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_lat)) {
+			$query .= " ? ,";
+			$types .= "d";
+			$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)_location_lat};
+		} else {
+			$query .= " NULL ,";				
+		}
+		if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_location_long) {
+			$query .= " ? ,";
+			$types .= "d";
+			$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)_location_long};
+		} else {
+			$query .= " NULL ,";				
+		}
+## ?>

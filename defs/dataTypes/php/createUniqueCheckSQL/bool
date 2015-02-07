@@ -1,0 +1,7 @@
+## tylko 1 rekord moze miec "tak", na przyklad 'domyslny jezyk', 'konto glowne' itp.
+		if ($this->${entity.prefix}_${tr.f_v($property.name)} != 1) {
+			$skipUniquenessCheck = true;
+		} else {
+			$uniqnessWhere = $uniqnessWhere . " AND ${entity.prefix}_${tr.f_v($property.name)} = 1 ";
+		}
+

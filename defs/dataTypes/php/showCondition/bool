@@ -1,0 +1,8 @@
+			$condition = $dataTypeCriteria["default"];
+			if (!is_null($condition) && trim($condition) != "") {
+				switch ($condition) {
+					case 0: $renderCriteria = T("NO"); break;
+					case 1: $renderCriteria = T("YES"); break;
+					case 2: $renderCriteria = T("NO_DATA"); break;
+				}
+			}

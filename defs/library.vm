@@ -1,0 +1,2907 @@
+#macro (parseFile $fileName)
+#if ($util.fileExists("$fileName", $extraFilesInfo))
+#parse("$fileName")
+#end
+#end
+
+#macro (parseFileWithStandard $fileName $standardFileName)
+#if ($util.fileExists("$fileName", $extraFilesInfo))
+#parse("$fileName")
+#else
+## a moze by sprawdzac czy na serwerze nie jest to nadpisane?
+## problemem jest to, że parseFileWithStandard można wołać zarówno w trybie PHP jak i HTML, bo to 
+## jest zwykłe wklejanie tekstu. Natomiast jeśli miałoby to byc na żywo includowanie, to musimy 
+## już tu wiedzieć że jest to użyte w trybie HTML lub PHP :-(
+#parse("$standardFileName")
+#end
+#end
+
+#macro (parseFileWithStandardText $fileName $standardText)
+#if ($util.fileExists("$fileName", $extraFilesInfo))
+#parse("$fileName")
+#else
+$standardText
+#end
+#end
+
+#macro (underscore $relation)
+#if ($relation.name)
+#set ($_ = "_")
+#else
+#set ($_ = "")
+#end
+#end
+	
+#macro (includeOnServerPHP $fileName)
+$fileNameToInclude = PORTAL_PATH . "/portlets/${tr.f_v($application.name)}/virgo${tr.FV($entity.name)}/modules/${fileName}.php";
+$tmpInclude${tr.FV($entity.name)} = new ${tr.f_v($application.name)}\virgo${tr.FV($entity.name)}();
+if (file_exists($fileNameToInclude) && is_readable($fileNameToInclude)) {
+	$output = shell_exec('php -l "'.$fileNameToInclude.'"');
+	$syntaxError = preg_replace("/Errors parsing.*$/", "", $output, -1, $count);
+	if($count > 0) {
+		$tmpInclude${tr.FV($entity.name)}->logError("Syntax error in '$fileNameToInclude':" . trim($syntaxError) . ".");
+		$includeError = 1;
+	} else {
+		include($fileNameToInclude);
+	}
+} else {
+   	$tmpInclude${tr.FV($entity.name)}->logError("File '$fileNameToInclude' not found.");
+   	$includeError = 1;
+}
+#end
+	
+#macro (includeOnServer $fileName)
+<?php
+#includeOnServerPHP($fileName)
+?>
+#end
+
+#macro (text $msg)
+## $messages.get("$msg")
+#if ($msg != "")
+<?php echo T($msg) ?>#end
+#end
+	
+#macro (textPHP $msg)
+## $messages.get("$msg")
+T('$msg')
+#end
+	
+#macro (echoInHTML $variableName)
+<?php
+#echoInPHP($variableName)
+?>
+#end
+	
+#macro (echoInPHP $variableName)
+#if ($variableName != '')
+## eval("\$resultEcho = \"\\$${variableName}\";");
+eval("\$resultEcho = \"${variableName}\";");
+echo '<h3> $variableName = "' . $resultEcho . '"</h3>';
+#else
+echo "<h3>Wszedl</h3>";
+#end
+#end
+
+## do ustawiaania wartosci pol formularza, ktore nie sa standardowo w pliku index.php a tylko w ajaxowo wgrywanym kontencie
+## uzywac: #setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "'$idValue'")
+#macro (setFormFieldValue $name $value)
+######################
+## i know this is madness, but, you know... IE8...
+######################
+## for(i=0; i<form.elements.length; i++){
+## 	if (form.elements[i].name == ${name}) {
+## 		form.elements[i].value = ${value};
+## 		break;
+## 	}
+## }
+	_pSF(form, ${name}, ${value});
+## dawniej:
+## form.${name}.value=${value}; 
+#end
+
+## usage:
+##	getAjaxToTarget("ajax_info.php", "myDiv");
+##	callAjax("ajax_info.php", "myDiv", 1000);
+#macro (ajaxJS)
+		<script type="text/javascript">
+function getXMLHttpRequest() {
+	var ua = navigator.userAgent.toLowerCase();
+	if (!window.ActiveXObject) {
+		return new XMLHttpRequest();
+	} else if (ua.indexOf('msie 5') == -1) {
+		return new ActiveXObject("Msxml2.XMLHTTP");
+	} else {
+		return new ActiveXObject("Microsoft.XMLHTTP");
+	}
+}		
+		
+var xmlhttpArray = new Array();
+function getAjaxToTarget(url, targetId) {
+	xmlhttpArray[targetId] = getXMLHttpRequest();
+	xmlhttpArray[targetId].onreadystatechange=function() {
+		if (xmlhttpArray[targetId].readyState==4 && xmlhttpArray[targetId].status==200) {
+			document.getElementById(targetId).innerHTML = xmlhttpArray[targetId].responseText;
+		}
+	}
+	xmlhttpArray[targetId].open("GET", url + "&timestamp=" + new Date().getTime(), true);
+	xmlhttpArray[targetId].send();
+}
+
+function callAjax(url, targetId, timeout, repeat) {
+	var rep = "";
+	if (repeat == 1) {
+		rep = "&rep=1";
+	}
+	getAjaxToTarget(url + rep, targetId);
+	setTimeout("callAjax('" + url + "', '" + targetId + "', " + timeout + ", 1);", timeout);
+}
+		</script>
+#end
+	
+#macro (getterSetterSession $variable $default)
+		static function setRemote${variable}($param, $menuId) {
+			virgo${tr.FV($entity.name)}::setRemoteSessionValue('$variable', $param, $menuId);
+		}
+
+		static function getRemote${variable}($menuId) {
+			return virgo${tr.FV($entity.name)}::getRemoteSessionValue('$variable', $default, $menuId); 
+		}
+		
+		static function set${variable}($param) {
+			virgo${tr.FV($entity.name)}::setLocalSessionValue('$variable', $param);
+		}
+
+		static function get${variable}() {
+			return virgo${tr.FV($entity.name)}::getLocalSessionValue('$variable', $default); 
+		}
+#end
+	
+#macro (selectResult)
+	$result = QL($query);
+#end
+	
+#macro (selectRows)
+	$rows = QR($query);
+#end
+	
+#macro (includeEntity $entityName)
+	include_once(PORTAL_PATH . "/components/com_${tr.f_v($application.prefix)}_${tr.f_v($entityName)}/${tr.f_v($application.prefix)}_${tr.f_v($entityName)}_class.php");
+#end
+	
+#macro (deleteCache)
+					deleteFileFromCache($this->${entity.prefix}_id, '${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}', '${tr.f_v($property.name)}');
+#end
+	
+#macro (renderColumn1 $expression $alias)
+#getParamValue($property.customProperty "SyncUsername")
+#if ($virgoWartosc != "")
+				$queryString = $queryString . ", jos_users.username ${alias}";
+#else
+#getParamValue($property.customProperty "SyncEmail")
+#if ($virgoWartosc != "")
+				$queryString = $queryString . ", jos_users.email ${alias}";
+#else
+#getParamValue($property.customProperty "SyncPassword")
+#if ($virgoWartosc != "")
+				$queryString = $queryString . ", '' AS ${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}";
+#else
+				$queryString = $queryString . ", ${expression} ${alias}";
+#end
+#end				
+#end
+#end
+	
+#macro (renderColumn2 $expression $alias)
+#if ($property.dataType.name == 'INTEGER' || $property.dataType.name == 'DECIMAL')
+#set ($align = "right")
+#else
+#set ($align = "left")
+#end
+				<th align="${align}" valign="middle" rowspan="$defaultRowspan" style="text-align: ${align};">
+#if ($property.dataType.name == 'IMAGE')
+					<span><?php echo T('${alias}') ?></span>
+#else				
+<?php
+	$oc = $result${tr.FV($entity.name)}->getOrderColumn(); 
+	$om = $result${tr.FV($entity.name)}->getOrderMode();
+	$pagingAscHTML = '<div style="display: inline;" class="button_paging">&#x21E7;</div>';
+	$pagingDescHTML = '<div style="display: inline;" class="button_paging">&#x21E9;</div>';
+?>
+						<span onclick="var form = document.getElementById('portlet_form_<?php echo $this->getId() ?>');
+							form.portlet_action.value='ChangeOrder'; 
+#setFormFieldValue("'virgo_order_column'" "'${expression}'")
+#setFormFieldValue("'virgo_order_mode'" "'<?php echo ($om == 'asc' ? 'desc' : 'asc') ?>'")
+							<?php echo JSFS() ?>
+							 " style="white-space: normal; cursor: pointer;" class="data_table_header">
+#text("'${tr.F_V($alias)}'")							
+							<?php echo ($oc == "${expression}" ? ($om == "" ? $pagingDescHTML : ($om == "asc") ? $pagingDescHTML : $pagingAscHTML) : "") ?> 
+						</span>
+#end					
+<?php
+	if (P('show_table_filter', '0') == '1') {
+		$tableFilter = virgo${tr.FV($entity.name)}::getLocalSessionValue('VirgoFilter${tr.FV($property.name)}', null);
+?>
+#if ($property.dataType.name == 'VARCHAR' || $property.dataType.name == 'INTEGER' || $property.dataType.name == 'DECIMAL')
+						<input
+							name="virgo_filter_${tr.f_v($property.name)}"
+							class="virgo_filter"
+							onChange="<?php echo JSFS(null, "Submit", true, array(), false, "SetVirgoTableFilter") ?>"
+							value="<?php echo $tableFilter ?>"
+#if ($property.dataType.name == 'INTEGER' || $property.dataType.name == 'DECIMAL')
+							style="margin-left: auto; width: 40px; text-align: right;"
+#end
+						/>
+#end
+<?php		
+	}
+?>
+				</th>
+#end
+	
+#macro (renderColumn3 $alias)
+## nowrap
+	<td align="right" class="<?php echo ($index % 2 == 0 ? "data_table_even" : "data_table_odd") ?>">
+		<span style="" class="<?php echo 'displayClass' ?>">
+			<?php echo $result${tr.FV($entity.name)}['${alias}'] ?>
+		</span>
+	</td>
+#end
+	
+#macro (findSecondParentForNMRelation)
+#set ($secondParentRelation = false)
+#foreach( $relation2 in $relation.childEntity.childRelations )
+#if ($relation2.parentEntity.name != $relation.parentEntity.name || ($relation2.parentEntity.name == $relation.parentEntity.name && $relation2.name != $relation.name))
+## #if ($relation2.parentEntity.dictionary)
+#if (!$secondParentRelation)
+#set ($secondParentRelation = $relation2)
+#set ($weakEntityRelation = $relation)
+#end
+## #end
+#end
+#end
+#end
+	
+#macro (createDataStructureHashes)
+		$tablePrefixes = array();
+//		$classNames = array();
+		$etityNames = array();		
+		$parents = array();
+#foreach( $entity2 in $application.entities )
+		$tablePrefixes["${tr.f_v($entity2.name)}"] = "${tr.f_v($entity2.prefix)}";
+//		$classNames["${tr.f_v($entity2.name)}"] = "virgo${tr.FV($entity2.name)}";
+##		$tmpFilePath = PORTAL_PATH . "/components/com_${tr.f_v($application.prefix)}_${tr.f_v($entity2.name)}/${tr.f_v($application.prefix)}_${tr.f_v($entity2.name)}_class.php";
+##		if (file_exists($tmpFilePath)) {
+##			include_once($tmpFilePath);
+##		}
+		$entityNames["${tr.f_v($entity2.name)}"] = "${tr.FV($entity2.name)}";
+		$tmpParents = array();
+#foreach ($relation2 in $entity2.childRelations)
+		$tmpParents[] = "${tr.f_v($relation2.parentEntity.name)}";
+#end
+		$parents["${tr.f_v($entity2.name)}"] = $tmpParents;
+#end
+		$ancestors = array();
+#foreach ($ancestor in $entity.allAncestors)
+		$ancestors["${tr.f_v($ancestor.name)}"] = "TRUE";
+#end
+#end
+	
+#macro (prepareTabsHashes)
+##//		$session = &JFactory::getSession();
+##		$context = $session->get('GLOBAL-VIRGO_CONTEXT_removed!');
+		$contextId = null;		
+#end
+	
+#macro (renderContext)
+<?php
+		$parentContextInfos = $result${tr.FV($entity.name)}->getParentsInContext();
+		foreach ($parentContextInfos as $parentContextInfo) {
+//			$whereClause${tr.FV($entity.name)} = $whereClause${tr.FV($entity.name)} . ' AND ' . $parentContextInfo['condition'];
+			if (isset($parentContextInfo['value'])) {
+?>		
+			<table class="db_context_record">
+				<tr>
+					<td class="db_context_label">
+						<?php echo $parentContextInfo['name'] ?>
+					</td>
+					<td class="db_context_value">
+						<?php echo $parentContextInfo['value'] ?>
+					</td>
+				</tr>
+			</table>
+<?php
+			}
+		}
+		if (P('filter_entity_pob_id', '') == '' && P('filter_mode', '0') == '0') {
+?>		
+#renderFilter()
+<?php
+		}
+?>
+#end
+	
+#macro (meInContextCheck)
+		if (is_null($_POST["mode"]) || $_POST["mode"] == '') {
+			$session = &JFactory::getSession();
+			if (is_null($context)) {
+			} else {
+				$tmpId = $context['${entity.prefix}_id'];
+				if (is_null($tmpId)) {
+				} else {			
+					$_POST["mode"] = "EDIT_${tr.fV($entity.namePlural)}";
+					JRequest::setVar('id', $tmpId);
+				}
+			}
+		}
+#end
+
+#macro (renderFilterBefore $name)
+#renderFilterBefore2($name " ")
+#end
+	
+#macro (renderFilterBefore2 $name $name2)
+			<tr>
+				<td class="db_criteria_label" nowrap="nowrap">
+					#text("'$name'") #text("'$name2'")
+				</td>
+				<td class="db_criteria_value">
+#end
+	
+#macro (renderFilterAfter $filterColumn)
+				</td>
+				<td class="db_criteria_value">
+##					<form method="post" id="${application.prefix}_${entity.prefix}_${tr.f_v($property.name)}_${tr.f_v($relation.parentEntity.name)}_${tr.f_v($relation.name)}_filter_form" style="display: inline;">
+##						<input type="submit" value="#text("'REMOVE_CRITERIA'")" class="buttona" style="float: right; padding: 0px;" onclick="this.form.virgo_filter_column.value='$filterColumn';this.form.portlet_action.value='RemoveCriterium';">
+##					</form>
+## actionButtonSimple("RemoveCriterium" "'REMOVE_CRITERIA'")
+					<button class="button btn btn-mini" onclick="
+						this.form.virgo_filter_column.value='$filterColumn';
+						this.form.portlet_action.value='RemoveCriterium';
+						<?php echo JSFS() ?>
+					">
+#text("'REMOVE_CRITERIA'")
+					</button>
+				</td>
+			</tr>
+#end
+	
+#macro (renderFilter )
+<?php
+		$criteria${tr.FV($entity.name)} = $result${tr.FV($entity.name)}->getCriteria();
+		$countTmp = 0;
+#foreach( $property in $entity.properties )
+		if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($property.name)}"])) {
+			$fieldCriteria${tr.FV($property.name)} = $criteria${tr.FV($entity.name)}["${tr.f_v($property.name)}"];
+			if ($fieldCriteria${tr.FV($property.name)}["is_null"] != 0) {
+				$countTmp = $countTmp + 1;
+			} else {
+				$dataTypeCriteria = $fieldCriteria${tr.FV($property.name)}["value"];
+				$renderCriteria = "";
+#parseFile("defs/dataTypes/php/showCondition/${tr.f_v($property.dataType.name)}")
+				if ($renderCriteria != "") {
+					$countTmp = $countTmp + 1;
+				}
+			}
+		}
+#end	
+#foreach( $relation in $entity.childRelations )
+		if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}"])) {
+			$parentCriteria = $criteria${tr.FV($entity.name)}["${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}"];
+			if ($parentCriteria["is_null"] != 0) {
+				$countTmp = $countTmp + 1;
+			} else {
+#if ($relation.parentEntity.dictionary)
+				if (isset($parentCriteria["ids"]) && is_array($parentCriteria["ids"])) {
+					$parentIds = $parentCriteria["ids"];
+#else
+				if (isset($parentCriteria["value"]) && $parentCriteria["value"] != "") {
+					$parentValue = $parentCriteria["value"];
+#end
+					$countTmp = $countTmp + 1;
+				}
+			}
+		}
+#end
+#foreach( $relation in $entity.parentRelations )
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+		if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($secondParentRelation.parentEntity.name)}${tr.f_v($relation.name)}"])) {
+			$countTmp = $countTmp + 1;
+		}
+#end
+#end
+#end
+#parseFile("modules_project/extraFilterShow/${tr.f_v($entity.name)}.php")
+		if (is_null($criteria${tr.FV($entity.name)}) || sizeof($criteria${tr.FV($entity.name)}) == 0 || $countTmp == 0) {
+		} else {
+?>
+			<input type="hidden" name="virgo_filter_column"/>
+			<table class="db_criteria_record">
+				<tr>
+					<td colspan="3" class="db_criteria_message">#text("'SEARCH_CRITERIA'")</td>
+				</tr>
+<?php
+#foreach( $property in $entity.properties )
+			if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($property.name)}"])) {
+				$fieldCriteria${tr.FV($property.name)} = $criteria${tr.FV($entity.name)}["${tr.f_v($property.name)}"];
+				if ($fieldCriteria${tr.FV($property.name)}["is_null"] != 0) {
+?>			
+#renderFilterBefore(${tr.Fv($property.name)})
+<?php
+					if ($fieldCriteria${tr.FV($property.name)}["is_null"] == 1) {
+?>
+					#text("'NOT_EMPTY_VALUE'")
+<?php
+					} elseif ($fieldCriteria${tr.FV($property.name)}["is_null"] == 2) {
+?>
+					#text("'EMPTY_VALUE'")
+<?php
+					}
+?>
+#renderFilterAfter(${tr.f_v($property.name)})
+<?php				
+				} else {
+					$dataTypeCriteria = $fieldCriteria${tr.FV($property.name)}["value"];
+					$renderCriteria = "";
+#parseFile("defs/dataTypes/php/showCondition/${tr.f_v($property.dataType.name)}")
+					if ($renderCriteria != "") {
+?>
+#renderFilterBefore(${tr.Fv($property.name)})
+					<?php echo $renderCriteria ?>
+#renderFilterAfter(${tr.f_v($property.name)})
+<?php
+					}
+				}
+			}
+#end
+#parseFile("modules_project/extraRenderCriteria/${tr.f_v($entity.name)}.php")
+#foreach( $relation in $entity.childRelations )
+			if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}"])) {
+				$parentCriteria = $criteria${tr.FV($entity.name)}["${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}"];
+				if ($parentCriteria["is_null"] == 1) {
+?>
+#renderFilterBefore2("${tr.Fv($relation.parentEntity.name)}" "${tr.Fv($relation.name)}")
+					#text("'EMPTY_VALUE'")
+#renderFilterAfter("${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}")
+<?php
+			} else {
+#if ($relation.parentEntity.dictionary)
+## ### SLOWNIK ### ##
+					if (isset($parentCriteria["ids"]) && is_array($parentCriteria["ids"])) {
+				  		$parentIds = $parentCriteria["ids"];
+						$parentLookups = array();
+						foreach ($parentIds as $parentId) {
+							$parentLookups[] = ${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}::lookup($parentId);
+						}
+//	$tmpName =  $context${tr.FV($relation.parentEntity.name)}->lookup($tmpId);
+?>
+#renderFilterBefore2("${tr.Fv($relation.parentEntity.name)}" "${tr.Fv($relation.name)}")
+					<?php echo implode(", ", $parentLookups) ?>
+#renderFilterAfter("${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}")
+<?php
+					}
+#else
+## ### NIESLOWNIK ### ##
+					$renderCriteria = $parentCriteria["value"];
+					if ($renderCriteria != "") {
+?>
+#renderFilterBefore2("${tr.f_v($relation.parentEntity.name)}" "${tr.f_v($relation.name)}")
+					<?php echo $renderCriteria ?>
+#renderFilterAfter("${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}")
+<?php
+					}
+#end
+				}
+			}
+#end
+#foreach( $relation in $entity.parentRelations )
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+		if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($secondParentRelation.parentEntity.name)}${tr.f_v($relation.name)}"])) {
+			$parentIds = $criteria${tr.FV($entity.name)}["${tr.f_v($secondParentRelation.parentEntity.name)}${tr.f_v($relation.name)}"];
+		}
+		if (isset($parentIds) && isset($parentIds['ids'])) {
+			$selectedIds = $parentIds['ids'];
+			$renderCriteria = "";
+			foreach ($selectedIds as $id) {
+				$obj = new ${tr.f_v($application.name)}\virgo${tr.FV($secondParentRelation.parentEntity.name)}($id['id']);
+				$renderCriteria = ($renderCriteria == "" ? "" : $renderCriteria . ", ") . $obj->getVirgoTitle();
+			}
+?>
+#renderFilterBefore(${tr.Fv($secondParentRelation.parentEntity.namePlural)})
+					<?php echo $renderCriteria ?>
+#renderFilterAfter(${tr.f_v($secondParentRelation.parentEntity.name)})
+<?php
+		}
+#end
+#end
+#end
+?>
+			</table>
+<?php
+		}
+?>
+#end
+
+## What's on the edit form:
+#macro (renderInput)
+#parseFileWithStandard("modules_project/renderInput/${tr.f_v($property.entity.name)}/${tr.f_v($property.name)}.php" "defs/renderInput.php")
+#end
+
+## What's on the details form:
+#macro (renderDataView)
+#parseFileWithStandard("defs/dataTypes/php/renderDataView/${tr.f_v($property.dataType.name)}" "defs/renderDataView.php")
+#end
+	
+#macro (detailsLinkStart)
+<?php
+	if (P('show_details_method') == "1") { 
+?>
+## zmiana kursora zamiast href="#" bo sie jebalo z joomfishem
+			<a  
+				style="cursor: pointer;" 
+				onclick="
+					var form=document.getElementById('portlet_form_<?php echo $this->getId() ?>'); 
+					form.portlet_action.value='View'; 
+					form.${tr.f_v($entity.prefix)}_id_<?php echo $this->getId() ?>.value='<?php echo isset($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id']) ? $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] : '' ?>'; 
+					form.target = ''; 
+<?php
+					if (isset($ajax) && !$ajax) {
+?>					
+						form.submit();
+<?php
+					} else {
+						echo JSFS(null, 'Submit', true, array());
+					}
+?>					
+				"
+			> 
+<?php
+	} 
+?>
+#end
+
+#macro (detailsLinkEnd)
+<?php
+	if (P('show_details_method') == "1") { 
+?>
+			</a> 
+<?php
+	} 
+?>
+#end
+
+	
+## What's on the table:
+#macro (renderOutput $dataTypeName)
+#if ($dataTypeName == 'INTEGER' || $dataTypeName == 'DECIMAL')
+#set ($align = "right")
+#else
+#set ($align = "left")
+#end
+<?php
+			if (P('form_only') != "4") {
+?>
+			<td 
+##				nowrap 
+				align="$align" 
+				class="<?php echo ($index % 2 == 0 ? "data_table_even" : "data_table_odd") ?> #if ($dataTypeName != 'BOOL')selectable#end"
+				style="cursor: pointer; text-align: ${align};"
+			>
+<?php
+			} else {
+?>
+			<li class="${tr.f_v($property.name)}">
+<?php
+			} 
+?>
+#if ($dataTypeName != 'URL' && $dataTypeName != 'AUDIO') 
+#detailsLinkStart()				
+#end	
+#if ($dataTypeName == 'INTEGER' || $dataTypeName == 'DECIMAL')
+		<span style="white-space: nowrap;" class="<?php echo 'displayClass' ?>">
+			<?php echo 
+#if ($dataTypeName == 'DECIMAL')			
+				number_format($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], 2, ',', ' ')
+#else
+				$result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'] 
+#end				
+			?>
+		</span>
+#elseif ($dataTypeName == 'BOOL')
+<?php
+	$canEditBoolean = ($this->canEdit() && P('show_form_${tr.f_v($property.name)}', "1") == "1");
+	if ($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'] == 2 || is_null($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'])) {
+		if ($canEditBoolean) { 
+?>
+<div class="parent inlineBlock">
+<div class="dropdown"><span style="cursor: pointer;" onclick="changeDisplay('boolean_options_${tr.f_v($property.name)}_<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'); return false;"><?php echo is_null($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}']) ? "&nbsp;&nbsp;&nbsp;&nbsp;" : #textPHP("NO_DATA") ?></span></div>
+	<div id="boolean_options_${tr.f_v($property.name)}_<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>" class="child" style="border: 1px solid #DDD; display: none; position: absolute; box-shadow: 1px 2px 2px black; border-radius: 0px;">
+<input 
+	type="submit" 
+	style="border: none; background-color: white;"
+	value="<?php echo #textPHP("YES") ?>" 
+	onclick="
+		this.form.portlet_action.value='VirgoSet${tr.FV($property.name)}True';
+#setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "'<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'")
+		"
+>
+<input 
+	type="submit" 
+	style="border: none; background-color: white;"
+	value="<?php echo #textPHP("NO") ?>" 
+	onclick="
+		this.form.portlet_action.value='VirgoSet${tr.FV($property.name)}False';
+#setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "'<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'")
+		"
+>
+	</div> 
+</div>
+<?php		
+		} else {
+			echo #textPHP("NO_DATA");			
+		}
+	} elseif ($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'] == 1) {
+		if ($canEditBoolean) { 
+?>
+<div class="parent inlineBlock">
+<div class="dropdown"><span style="cursor: pointer;" onclick="changeDisplay('boolean_options_${tr.f_v($property.name)}_<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'); return false;"><?php echo #textPHP("YES") ?></span></div>
+	<div id="boolean_options_${tr.f_v($property.name)}_<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>" class="child" style="border: 1px solid #DDD; display: none; position: absolute; box-shadow: 1px 2px 2px black; border-radius: 0px;">
+<input 
+	type="submit" 
+	style="border: none; background-color: white;"
+	value="<?php echo #textPHP("NO") ?>" 
+	onclick="
+		this.form.portlet_action.value='VirgoSet${tr.FV($property.name)}False';
+#setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "'<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'")
+		"
+>
+	</div> 
+</div>
+<?php		
+		} else {
+			echo #textPHP("YES");			
+		}
+	} elseif ($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'] === 0) {
+		if ($canEditBoolean) { 
+?>
+<div class="parent inlineBlock">
+<div class="dropdown"><span style="cursor: pointer;" onclick="changeDisplay('boolean_options_${tr.f_v($property.name)}_<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'); return false;"><?php echo #textPHP("NO") ?></span></div>
+	<div id="boolean_options_${tr.f_v($property.name)}_<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>" class="child" style="border: 1px solid #DDD; display: none; position: absolute; box-shadow: 1px 2px 2px black; border-radius: 0px;">
+<input 
+	type="submit" 
+	style="border: none; background-color: white;"
+	value="<?php echo #textPHP("YES") ?>" 
+	onclick="
+		this.form.portlet_action.value='VirgoSet${tr.FV($property.name)}True';
+#setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "'<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] ?>'")
+		"
+>
+	</div> 
+</div>
+<?php		
+		} else {
+			echo #textPHP("NO");			
+		}
+	} 
+?>
+#elseif ($dataTypeName == 'TEXT' || $dataTypeName == 'CODE')
+		<?php
+			$len = strlen($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}']);
+			$shortTextSize = P('short_text_size_${tr.f_v($property.name)}', 30);
+		?>
+		<span 
+#if ($entity.dictionary)    
+	style="<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_virgo_deleted'] ? "text-decoration: line-through;" : "" ?>"
+#end    	
+			class="<?php echo 'displayClass' ?>" <?php print ($len > $shortTextSize ? 'title="' . htmlentities($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], ENT_QUOTES, "UTF-8") . '"' : '') ?>>
+			<?php
+				if ($shortTextSize > 0 && $len > $shortTextSize) {
+					echo htmlentities(substr($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], 0, $shortTextSize), ENT_QUOTES, "UTF-8") . "...";
+				} else {
+					if ($shortTextSize == 0) {
+						echo "<pre style='white-space: pre-line;'>";
+					}
+					echo htmlentities($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], ENT_QUOTES, "UTF-8");
+					if ($shortTextSize == 0) {
+						echo "</pre>";
+					}
+				}				 
+			?>
+		</span>
+#elseif ($dataTypeName == 'IMAGE')
+<?php
+			if (P('form_only') == "4") {
+				$chessboardImageSize = P('chessboard_image_size');
+				if (is_null($chessboardImageSize) || trim($chessboardImageSize) == "" || $chessboardImageSize == "0") {
+					$zoomParam = "";
+				} else {
+					$zoomParam = "&virgo_thumbnail=true&virgo_media_width=" . P('chessboard_image_size');
+				}
+			} else {
+				$zoomParam = "&virgo_media_width=100&virgo_media_height=100&virgo_image_shrink_only=true"; ## zeby nie znieksztalcalo tabeli...
+			}
+?>
+		<img class="thumbnail" src="<?php echo $_SESSION['portal_url'] ?>?virgo_media=true&virgo_media_table_name=${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}&virgo_media_table_prefix=${tr.f_v($entity.prefix)}&virgo_media_property_name=${tr.f_v($property.name)}&virgo_media_row_id=<?php echo $result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id'] ?>&<?php echo $zoomParam ?>&<?php echo getTokenName($result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id']) ?>=<?php echo getTokenValue($result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id']) ?>"/>
+#elseif ($dataTypeName == 'AUDIO')
+<?php 
+	$songUrl = $_SESSION['portal_url'] . "?virgo_media=true&virgo_media_type=audio&virgo_media_table_name=${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}&virgo_media_table_prefix=${tr.f_v($entity.prefix)}&virgo_media_property_name=${tr.f_v($property.name)}&virgo_media_row_id=" . $result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id'] . "&" . getTokenName($result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id']) . "=" . getTokenValue($result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id']);
+	$songUrl = urlencode($songUrl);
+?>
+		<object menu="false" onclick="if (event.stopPropagation) event.stopPropagation(); else event.cancelBubble = true;" type="application/x-shockwave-flash" data="<?php echo $_SESSION['portal_url'] ?>/libraries/musicplayer/musicplayer.swf?b_bgcolor=333333&b_fgcolor=CCCCCC&song_url=<?php echo $songUrl ?>" width="17" height="17">
+			<param name="movie" value="<?php echo $_SESSION['portal_url'] ?>/libraries/musicplayer/musicplayer.swf?b_bgcolor=333333&b_fgcolor=CCCCCC&song_url=<?php echo $songUrl ?>" />
+			<img src="noflash.gif" width="17" height="17" alt="" />
+			<param name="wmode" value="transparent" />
+			<param name="menu" value="false" />
+		</object>
+#elseif ($dataTypeName == 'FILE')
+		<a href="<?php echo $_SESSION['portal_url'] ?>?virgo_media=true&virgo_media_type=file&virgo_media_table_name=${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}&virgo_media_table_prefix=${tr.f_v($entity.prefix)}&virgo_media_property_name=${tr.f_v($property.name)}&virgo_media_row_id=<?php echo $result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id'] ?>&<?php echo getTokenName($result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id']) ?>=<?php echo getTokenValue($result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_id']) ?>"><?php echo $result${tr.FV($property.entity.name)}['${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name'] ?></a>
+#elseif ($dataTypeName == 'URL')
+<?php
+		$url = htmlentities($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], ENT_QUOTES, "UTF-8");
+?>
+		<a href="http://<?php echo $url ?>" target="_blank">
+			<?php echo $url ?>
+		</a>
+#elseif ($dataTypeName == 'EMAIL')
+<?php
+		$email = htmlentities($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], ENT_QUOTES, "UTF-8");
+?>
+		<a href="mailto:<?php echo $email ?>" target="_blank">
+			<?php echo $email ?>
+		</a>
+#elseif ($dataTypeName == 'MENU')
+		<span style="" class="<?php echo 'displayClass' ?>">
+<?php
+		if (!is_null($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'])) {
+			$query = "SELECT concat(menu.title, concat(' - ', item.name)) as label FROM jos_menu item, jos_menu_types menu WHERE menu.menutype = item.menutype AND item.id = " . $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)};
+#selectResult()
+			$menuLabel = "";
+			if (sizeof($result) > 0) {
+				$menuLabel = $result[0];
+			}
+		} else {
+			$menuLabel = "";
+		}
+?>
+				<?php echo htmlentities($menuLabel, ENT_QUOTES, "UTF-8") ?>
+		</span>
+#elseif ($dataTypeName == 'HTML')
+	<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'] ?>
+#elseif ($dataTypeName == 'USER')
+	<?php echo virgoUser::lookup($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}']) ?>
+#else
+		<span 
+#if ($entity.dictionary)    
+	style="<?php echo $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_virgo_deleted'] ? "text-decoration: line-through;" : "" ?>"
+#end    	
+			class="<?php echo 'displayClass' ?>">
+#getParamValue($property.customProperty "SyncUsername")
+#if ($virgoWartosc != "")
+				<?php echo htmlentities($result${tr.FV($entity.name)}->username, ENT_QUOTES, "UTF-8") ?>
+#else				
+#getParamValue($property.customProperty "SyncEmail")
+#if ($virgoWartosc != "")
+				<?php echo htmlentities($result${tr.FV($entity.name)}->email, ENT_QUOTES, "UTF-8") ?>
+#else				
+				<?php echo htmlentities($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], ENT_QUOTES, "UTF-8") ?>
+#end			
+#end
+		</span>
+#end
+#if ($dataTypeName != 'URL' && $dataTypeName != 'AUDIO') 
+#detailsLinkEnd()				
+#end	
+<?php
+			if (P('form_only') != "4") {
+?>
+			</td>
+<?php
+			} else {
+?>
+			</li>
+<?php
+			}
+?>
+#end
+
+#macro (renderPDF $entity $property $border)
+#if ($property.dataType.name == 'INTEGER')
+			$tmpLn = $pdf->MultiCell($minWidth['$property.name'], $colHeight, '' . $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], $border, 'R', 0, 0);
+#elseif ($property.dataType.name == 'DECIMAL')
+			$tmpLn = $pdf->MultiCell($minWidth['$property.name'], $colHeight, '' . number_format($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], 2, ',', ' '), $border, 'R', 0, 0);
+#elseif ($property.dataType.name == 'IMAGE')
+			if (!is_null($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) {
+				$cacheFile = PORTAL_PATH . virgo${tr.FV($entity.name)}::getCachedImagePath($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'], '${tr.f_v($property.name)}', '100', '100');
+				$pdf->Image($cacheFile, $pdf->GetX(), $pdf->GetY(), null, null, 'JPG');
+				$tmpLn = $imageSizeY * 2 / $fontSize;
+				$pdf->MultiCell($minWidth['$property.name'], $colHeight, '', $border, 'R', 0, 0);
+			}
+#elseif ($property.dataType.name == 'BOOL')
+			$renderCriteria = "";
+			switch ($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}']) {
+				case 0: $renderCriteria = T("NO"); break;
+				case 1: $renderCriteria = T("YES"); break;
+				case 2: $renderCriteria = T("NO_DATA"); break;
+			}			
+			$tmpLn = $pdf->MultiCell($minWidth['$property.name'], $colHeight, '' . $renderCriteria, $border, 'C', 0, 0);
+#else
+			$tmpLn = $pdf->MultiCell($minWidth['$property.name'], $colHeight, '' . $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], $border, 'L', 0, 0);
+#end
+#end
+
+#macro (renderCSV $entity $property)
+#if ($property.dataType.name == 'VARCHAR' || $property.dataType.name == 'TEXT')
+#set ($delimeter = '. $stringDelimeter .')
+#else
+#set ($delimeter = '.')
+#end
+#if ($property.dataType.name == 'IMAGE')
+			$data = $data ${delimeter} (isset($result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob']) ? "IMG" : "") ${delimeter} $separator;
+#else
+			$data = $data ${delimeter} $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'] ${delimeter} $separator;
+#end			
+#end
+	
+#macro (renderExcel $entity $property $kolumna)
+#if ($property.dataType.name == 'IMAGE')
+	/* ignore images */
+#else
+#set ($excelDataType = '\PHPExcel_Cell_DataType::TYPE_STRING')
+#if ($property.dataType.name == 'INTEGER' || $property.dataType.name == 'DECIMAL')
+#set ($excelDataType = '\PHPExcel_Cell_DataType::TYPE_NUMERIC')
+#end
+			$objPHPExcel->getActiveSheet()->setCellValueExplicitByColumnAndRow($kolumna, $index, $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}'], ${excelDataType});
+#end			
+#end
+
+## Lista typow parametrow: http://docs.joomla.org/Standard_parameter_types	
+#macro (paramsXML)
+	<params>
+##		<param name="virgo_class_name" type="hidden" default="virgo${tr.FV($entity.name)}" />
+		<param name="form_only" default="0" type="radio" label="Component mode" description="Component mode">
+			<option value="0">CRUD Table</option>
+			<option value="1">Only creation form</option>
+			<option value="5">Only edition form (1 record/user)</option>
+			<option value="6">Edit user data</option>
+			<option value="2">Search by default</option>
+#set ($hasDate = "0")
+#set ($hasValidityDate = "0")
+#foreach( $property in $entity.properties )
+#if ($property.dataType.name == "DATE" || $property.dataType.name == "DATETIME") 
+#set ($hasDate = "1")
+#if ($property.customProperty)
+#getParamValue($property.customProperty "Validity")
+#if ($virgoWartosc == "true")
+#set ($hasValidityDate = "1")
+#end
+#end
+#end
+#end
+#if ($hasDate == "1")
+			<option value="3">Event callendar view</option>
+#end
+#set ($hasImage = "0")
+#foreach( $property in $entity.properties )
+#if ($property.dataType.name == "IMAGE") 
+#set ($hasImage = "1")
+#end
+#end
+#if ($hasImage == "1")
+			<option value="4">Chessboard</option>
+#end
+		</param>
+#if ($hasDate == "1")
+		<param name="event_column" default="0" type="list" label="Event column" description="Event column">
+#foreach( $property in $entity.properties )
+#if ($property.dataType.name == "DATE" || $property.dataType.name == "DATETIME")
+			<option value="${tr.f_v($property.name)}">${tr.Fv($property.name)}</option>
+#end
+#end
+		</param>
+#end
+#if ($hasValidityDate == "1")
+		<param name="only_records_in_valid_range" default="1" type="radio" label="Show records in valid date range only" description="Show records in valid date range only">
+			<option value="1">Yes, only in range</option>
+			<option value="0">No, show all of them</option>
+		</param>
+#end	
+#if ($hasImage == "1")
+		<param name="chessboard_width" default="4" type="list" label="Chessboard width" description="Chessboard width">
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</param>
+		<param name="chessboard_image_size" default="200" type="text" label="Chessboard image size" description="Chessboard image size">
+		</param>
+		<param name="chessboard_cell_width" default="0" type="text" label="Chessboard cell width" description="Chessboard cell width (0 = not specified)">
+		</param>
+		<param name="chessboard_cell_height" default="0" type="text" label="Chessboard cell height" description="Chessboard cell height (0 = not specified)">
+		</param>
+#end
+		<param name="only_private_records" default="0" type="radio" label="Show private records only" description="Show private records only">
+			<option value="0">No, records from all users</option>
+			<option value="1">Yes, logged in user created only</option>
+		</param>
+##		<param name="show_children_view" default="0" type="radio" label="Show children view" description="Show children view">
+##			<option value="0">Yes</option>
+##			<option value="1">No children view</option>
+##		</param>
+#if ($defaultCSS)
+#set ($tmpDefaultCSS = $defaultCSS)
+#else
+#set ($tmpDefaultCSS = "virgo")
+#end
+		<param name="css_usage" default="$tmpDefaultCSS" type="radio" label="CSS used for component" description="CSS used for component">
+			<option value="virgo">Virgo generated</option>
+			<option value="template">Inherit from template</option>
+		</param>
+		<param name="hide_tabs" default="0" type="radio" label="Hide tabs" description="Hide tabs">
+			<option value="0">No, show them</option>
+			<option value="1">Yes, I don't want to see them</option>
+		</param>
+		
+#*		
+		<param name="master_edit_menu_item" type="menuitem" state="1" label="Master edit menu item" description="Master edit menu item" />
+		<param name="master_list_menu_item" type="menuitem" state="1" label="Master list menu item" description="Master list menu item" />
+		<param name="master_context_menu_item" type="menuitem" state="1" label="Master context menu item" description="Master context menu item" />
+*#
+		<param name="show_details_method" default="0" type="radio" label="Details view invocation" description="Details view invocation">
+			<option value="0">Details button</option>
+			<option value="1">Each field is a link</option>
+		</param>
+		<param name="available_page_sizes" type="text" default="5,10,20,50,all" label="Available page sizes" description="Available page sizes" size="30" />
+		<param name="default_page_size" type="text" default="20" label="Default page size" description="Default page size" size="3" />
+		<param name="default_sort_column" default="" type="list" label="Default sort column" description="Default sort column">
+			<option value="${tr.f_v($entity.prefix)}_id">id</option>
+#foreach( $property in $entity.properties )
+## "multikolumnowe" wlasciwosci nie moga byc sortowane, albo inaczej: musza same wybrac po ktorej kolumnie bedzie sort 
+#parseFile("defs/dataTypes/php/sortProperty/${tr.f_v($property.dataType.name)}")
+#end
+#foreach( $relation in $entity.childRelations )
+#if ($relation.name)								
+			<option value="${tr.f_v($relation.parentEntity.name)}_${tr.f_v($relation.name)}">${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}</option>
+#else							
+			<option value="${tr.f_v($relation.parentEntity.name)}">${tr.Fv($relation.parentEntity.name)}</option>
+#end
+#end
+		</param>
+		<param name="default_sort_mode" default="asc" type="radio" label="Default sort mode" description="Default sort mode">
+			<option value="asc">Ascending</option>
+			<option value="desc">Descending</option>
+		</param>
+		<param name="enable_record_duplication" default="0" type="radio" label="Enable record duplication" description="Enable record duplication">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+#if ($entity.versioned)
+		<param name="show_record_history" default="0" type="radio" label="Show record history" description="Show record history">
+			<option value="0">Yes</option>
+			<option value="1">No</option>
+		</param>
+#end
+		<param name="empty_values_search" default="0" type="radio" label="Allow empty values search" description="Allow empty values search">
+			<option value="0">Yes</option>
+			<option value="1">No</option>
+		</param>
+		<param name="title_value" type="textarea" default="" label="Virgo title" description="PHP expression, eg. $this->getName() . ' ' . $this->getId();" rows="10" cols="40">			
+		</param>
+		<param name="log_level" default="INFO" type="radio" label="Log level" description="Log level">
+			<option value="TRACE">Trace</option>
+			<option value="DEBUG">Debug</option>
+			<option value="INFO">Info</option>
+			<option value="ERROR">Error</option>
+			<option value="FATAL">Fatal</option>
+		</param>
+		<param name="under_construction" default="0" type="radio" label="Under construction" description="Under construction - only user 'admin' can see it">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+		<param name="ajax_max_label_list_size" type="text" default="10" label="Max label number in ajax component" description="Max label list size in ajax component" size="3" />
+		<param name="check_token" default="0" type="radio" label="Check token" description="Check Joomla token against csrf attacks. Set to 'no' only if this component does not provide any delicate actions.">
+			<option value="0">Yes</option>
+			<option value="1">Hmm... it should be set to yes, but...</option>
+		</param>
+		<param name="under_construction_allowed_user" type="text" default="" label="Under construction allowed user" description="Under construction allowed user name" size="20" />
+		<param name="show_project_name" default="1" type="radio" label="Show project name" description="Show project name">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+#foreach ($property	in $entity.properties)		
+#if ($property.dataType.name == "IMAGE") 
+		<param name="scale_image_to_width_${tr.f_v($property.name)}" default="" type="text" label="Scale image for field ${tr.Fv($property.name)} to width" description="On upload scale image for field ${tr.Fv($property.name)} to width">
+		</param>
+		<param name="scale_image_to_height_${tr.f_v($property.name)}" default="" type="text" label="Scale image for field ${tr.Fv($property.name)} to height" description="On upload scale image for field ${tr.Fv($property.name)} to height">
+		</param>
+#end		
+#end		
+#set ($synchronizeUser = "0")					
+#foreach ($property	in $entity.properties)
+#readSyncValues()
+#if ($sync == "1") 
+#set ($synchronizeUser = "1")
+#end
+#end
+#if ($synchronizeUser == "1") 
+		<param name="user_activation" default="1" type="radio" label="User activation" description="Component will create users. Do they have to activate theirs accounts? Depends also on Joomla settings.">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+#end
+		<param name="pdf_font_name" default="freeserif" type="radio" label="PDF font name" description="PDF font name">
+			<option value="freesans">freesans</option>
+			<option value="freeserif">freeserif</option>
+		</param>		
+		<param name="pdf_include_bold_font" default="0" type="radio" label="PDF include bold font" description="PDF include bold font">
+			<option value="0">Yes</option>
+			<option value="1">No</option>
+		</param>		
+		<param name="pdf_font_size" type="text" default="10" label="PDF font size" description="PDF font size" size="2" />
+		<param name="pdf_page_orientation" default="P" type="radio" label="PDF page orientation" description="PDF page orientation">
+			<option value="P">Portrait</option>
+			<option value="L">Landscape</option>
+		</param>		
+		<param name="pdf_max_column_width" type="text" default="70" label="PDF max column width" description="PDF max column width" size="3" />
+		<param name="import_separator" type="text" default="," label="Field separator in import" description="For list: ,X;X:X|XTAB For hidden: , For text field leave empty" size="10" />
+		<param name="export_separator" type="text" default="," label="Field separator in export" description="Field separator in export" size="1" />
+		<param name="export_string_delimeter" type="text" default="&quot;" label="String delimeter in export" description="String delimeter in export" size="1" />
+#foreach( $property in $entity.properties )
+#parseFile("defs/dataTypes/php/componentParameters/${tr.f_v($property.dataType.name)}")
+#end
+#foreach( $relation in $entity.parentRelations )
+## sprawdz, czy te dzieci to przypadkiem nie jest tabela n:m ktora ma drugiego rodzica, ktory jest slownikiem
+#set ($childrenRendered = false)
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+#set ($childrenRendered = true)
+		<param name="n_m_children_input_${tr.f_v($relation.childEntity.name)}_${tr.f_v($relation.name)}" default="select" type="radio" label="Input method for ${tr.Fv($relation.childEntity.namePlural)} ${tr.Fv($relation.name)}" description="Input method for ${tr.F_v($relation.childEntity.namePlural)} ${tr.F_v($relation.name)}">
+			<option value="select">Option selection multiple</option>
+			<option value="checkbox">Checkboxes</option>
+		</param>
+		<param name="show_form_${tr.f_v($$secondParentRelation.parentEntity.name)}${tr.f_v($relation.name)}" default="0" type="radio" label="Allow assignment by 'with selected' button for ${tr.Fv($$secondParentRelation.parentEntity.namePlural)} ${tr.Fv($relation.name)}" description="Allow assignment by 'with selected' button for ${tr.Fv($$secondParentRelation.parentEntity.namePlural)} ${tr.Fv($relation.name)}">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+#end
+#end
+#end
+		<param name="send_email" default="0" type="radio" label="Send email on creation" description="Send email on creation">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+		<param name="send_email_address" type="text" default="" label="Email address" description="Email address" size="40" />
+		<param name="send_email_subject" type="text" default="New ${tr.fv($entity.name)} created" label="Email subject" description="Email subject" size="40" />
+		<param name="send_email_body" type="textarea" default="Hello!\n\nA new ${tr.fv($entity.name)} record has been created. These are the inserted values:\n\n%s\nThanks!\nAdministrator." label="Email text" rows="10" cols="40">			
+		</param>
+		<param name="send_email_field_value" type="textarea" default="%s: %s.\n" label="Email field-value" description="Email field-value"  rows="2" cols="40" >
+		</param>
+#parseFile("modules_project/customParams/${tr.f_v($entity.name)}.php")
+		<param name="@spacerPermissions" type="spacer" default="Permissions" label="Permissions" description="Permissions" /> 
+		<param name="view_permissions" type="usergroup" multiple="true" default="" label="View record" description="" />		
+		<param name="search_permissions" type="usergroup" multiple="true" default="" label="Search" description="" />		
+		<param name="add_permissions" type="usergroup" multiple="true" default="" label="Add record" description="" />		
+		<param name="edit_permissions" type="usergroup" multiple="true" default="" label="Edit record" description="" />		
+		<param name="delete_permissions" type="usergroup" multiple="true" default="" label="Delete record" description="" />		
+		<param name="import_permissions" type="usergroup" multiple="true" default="" label="Import" description="" />		
+		<param name="export_permissions" type="usergroup" multiple="true" default="" label="Export" description="" />		
+		<param name="report_permissions" type="usergroup" multiple="true" default="" label="Report" description="" />		
+		<param name="@spacerTable" type="spacer" default="Forms" label="Forms" description="Forms" />
+		<param name="table_form" type="list" label="Table form" description="Table form">
+			<option value="virgo_default">virgo default</option>
+			<option value="virgo_entity">entity default</option>
+#foreach ($fileName in $util.getFiles("modules_project/insteadTable/${tr.f_v($entity.name)}/"))
+			<option value="$fileName">$fileName</option>
+#end	
+		</param>
+		<param name="view_form" type="list" label="View form" description="View form">
+			<option value="virgo_default">virgo default</option>
+			<option value="virgo_entity">entity default</option>
+#foreach ($fileName in $util.getFiles("modules_project/insteadView/${tr.f_v($entity.name)}/"))
+			<option value="$fileName">$fileName</option>
+#end	
+		</param>
+		<param name="create_form" type="list" label="Create form" description="Create form">
+			<option value="virgo_default">virgo default</option>
+			<option value="virgo_entity">entity default</option>
+#foreach ($fileName in $util.getFiles("modules_project/insteadCreate/${tr.f_v($entity.name)}/"))
+			<option value="$fileName">$fileName</option>
+#end	
+		</param>
+		<param name="edit_form" type="list" label="Edit form" description="Edit form">
+			<option value="virgo_default">virgo default</option>
+			<option value="virgo_entity">entity default</option>
+#foreach ($fileName in $util.getFiles("modules_project/insteadForm/${tr.f_v($entity.name)}/"))
+			<option value="$fileName">$fileName</option>
+#end	
+		</param>
+		<param name="@spacerTable" type="spacer" default="Table" label="Table" description="Table" />
+#foreach( $property in $entity.properties )
+#if ($property.obligatory)
+#set ($defaultTableShow = "1")
+#else
+#set ($defaultTableShow = "0")		
+#end
+		<param name="show_table_${tr.f_v($property.name)}" type="radio" default="$defaultTableShow" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_table_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.parentRelations )
+		<param name="show_table_${tr.f_v($relation.childEntity.namePlural)}${tr.f_v($relation.name)}" type="radio" default="0" label="Show ${tr.Fv($relation.childEntity.namePlural)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+		<param name="@spacerCreate" type="spacer" default="Create" label="Create" description="Create" /> 
+#foreach( $property in $entity.properties )
+		<param name="show_create_${tr.f_v($property.name)}" type="radio" default="1" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="2">Read</option>
+			<option value="1">Change</option>
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_create_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="2">Read</option>
+			<option value="1">Change</option>
+			<option value="3">Change Ajax</option>
+		</param>
+#end
+#foreach( $relation in $entity.parentRelations )
+		<param name="show_create_${tr.f_v($relation.childEntity.namePlural)}${tr.f_v($relation.name)}" type="radio" default="0" label="Show ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Change</option>
+		</param>
+#end	
+		<param name="@spacerForm" type="spacer" default="Form" label="Form" description="Form" /> 
+#foreach( $property in $entity.properties )
+		<param name="show_form_${tr.f_v($property.name)}" type="radio" default="1" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="2">Read</option>
+			<option value="1">Change</option>
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_form_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="2">Read</option>
+			<option value="1">Change</option>
+			<option value="3">Change Ajax</option>
+		</param>
+#end
+#foreach( $relation in $entity.parentRelations )
+		<param name="show_form_${tr.f_v($relation.childEntity.namePlural)}${tr.f_v($relation.name)}" type="radio" default="0" label="Show ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Change</option>
+		</param>
+#end
+		<param name="@spacerView" type="spacer" default="View" label="View" description="View" /> 
+#foreach( $property in $entity.properties )
+		<param name="show_view_${tr.f_v($property.name)}" type="radio" default="1" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_view_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.parentRelations )
+		<param name="show_view_${tr.f_v($relation.childEntity.namePlural)}${tr.f_v($relation.name)}" type="radio" default="0" label="Show ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+	
+		<param name="@spacerSearch" type="spacer" default="Search" label="Search" description="Search" /> 
+#foreach( $property in $entity.properties )
+		<param name="show_search_${tr.f_v($property.name)}" type="radio" default="1" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_search_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.parentRelations )
+		<param name="show_search_${tr.f_v($relation.childEntity.namePlural)}${tr.f_v($relation.name)}" type="radio" default="0" label="Show ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.childEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+
+		<param name="@spacerPDF" type="spacer" default="PDF" label="PDF" description="PDF" /> 
+#foreach( $property in $entity.properties )
+		<param name="show_pdf_${tr.f_v($property.name)}" type="radio" default="1" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+			<option value="2">Count</option>
+#if ($property.dataType.name == "INTEGER" || $property.dataType.name == "DECIMAL")
+			<option value="3">Sum</option>
+			<option value="4">Avg</option>
+#end
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_pdf_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+		<param name="@spacerExport" type="spacer" default="Export" label="" description="" /> 
+#foreach( $property in $entity.properties )
+		<param name="show_export_${tr.f_v($property.name)}" type="radio" default="1" label="Show ${tr.Fv($property.name)}" description="Show/Hide ${tr.Fv($propery.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+#foreach( $relation in $entity.childRelations )
+		<param name="show_export_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="radio" default="1" label="Show ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Show/Hide ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}">
+			<option value="0">Hide</option>
+			<option value="1">Show</option>
+		</param>
+#end
+		<param name="@spacerFilter" type="spacer" default="Filter" label="" description="" /> 
+#foreach( $relation in $entity.childRelations )
+		<param name="limit_to_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}" type="text" default="" label="Limit to ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)}" description="Limit records to those who have such values of ${tr.Fv($relation.parentEntity.name)} ${tr.Fv($relation.name)} (coma separated ids or 'MENU_TITLE' token)" size="40">			
+		</param>
+#end		
+		<param name="custom_sql_condition" type="textarea" default="" label="Custom SQL condition (eg. ${tr.f_v($entity.prefix)}_abc_id in (select abc_id from...))" rows="10" cols="40">			
+		</param>
+	</params>
+#end
+
+#macro (virgoTitlePropertyStandard $entity)
+#set ($done = 'false') 
+#foreach( $property in $entity.properties )
+#if (($property.name == 'name' || $property.name == 'nazwa') && $done == 'false')
+#set ($done = 'true') 
+#set ($virgoTitleProperty = $property.name) 
+#end	
+#end
+#if ($done == 'false')
+#foreach( $property in $entity.properties )
+#if ($property.dataType.name == 'VARCHAR' && $property.dataType.size == 255 && $done == 'false')
+#set ($done = 'true') 
+#set ($virgoTitleProperty = $property.name) 
+##		return $this->${entity.prefix}_${tr.f_v($property.name)};
+#end	
+#end
+#end
+#if ($done == 'false')
+#foreach( $property in $entity.properties )
+#if ($property.dataType.name == 'VARCHAR' && $done == 'false')
+#set ($done = 'true') 
+#set ($virgoTitleProperty = $property.name) 
+#end	
+#end
+#end
+#if ($done == 'false')
+#foreach( $property in $entity.properties )
+#if ($done == 'false')
+#set ($done = 'true') 
+#if ($property.dataType.name == 'IMAGE' || $property.dataType.name == 'FILE' || $property.dataType.name == 'AUDIO' )
+#set ($virgoTitleProperty = "${property.name}_virgo_file_name") 
+#else
+#set ($virgoTitleProperty = $property.name) 
+#end
+#end	
+#end
+#end
+#if ($done == 'false')
+#set ($virgoTitleProperty = "id") 
+#end
+#end
+
+#macro (getChildrenData)
+<?php
+	$record = new ${tr.f_v($application.name)}\virgo${tr.FV($entity.name)}();
+	$recordId = is_array($result${tr.FV($entity.name)}) ? $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] : $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id;
+	$record->load($recordId);
+	$subrecords${tr.FV($relation.childEntity.namePlural)} = $record->get${tr.FV($relation.childEntity.namePlural)}${tr.FV($relation.name)}();
+	$size${tr.FV($relation.childEntity.namePlural)} = count($subrecords${tr.FV($relation.childEntity.namePlural)});
+?>
+#end
+	
+#macro (renderChildrenData $alwaysVisible)
+<?php
+	if ($size${tr.FV($relation.childEntity.namePlural)} == 0) {
+?>
+##		#text("'NO_DATA_TO_SHOW'")
+<?php
+	} else {
+		$subrecordIndex = 0;
+		foreach ($subrecords${tr.FV($relation.childEntity.namePlural)} as $subrecord) {
+			$subrecordIndex++;
+#set ($childrenRendered = false)
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+#set ($childrenRendered = true)
+			$parent${tr.FV($secondParentRelation.parentEntity.name)} = new ${tr.f_v($application.name)}\virgo${tr.FV($secondParentRelation.parentEntity.name)}($subrecord->get${tr.FV($secondParentRelation.parentEntity.prefix)}${tr.FV($secondParentRelation.name)}Id());
+			echo htmlentities($parent${tr.FV($secondParentRelation.parentEntity.name)}->getVirgoTitle(), ENT_QUOTES, "UTF-8");
+#end
+#end
+#if (!$childrenRendered) 
+			echo htmlentities($subrecord->getVirgoTitle(), ENT_QUOTES, "UTF-8");
+#end
+			if ($subrecordIndex < $size${tr.FV($relation.childEntity.namePlural)}) {
+				echo ", ";
+			}
+		}	
+?>
+<?php
+	}	
+?>
+#end
+		
+#macro (renderStandardTooltip)
+<?php
+	if ($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_usr_created_id == 0) {
+		$username = #textPHP('ANONYMOUS');
+	} else {
+		$tmpUser =& JUser::getInstance((int)$result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_usr_created_id);
+		$username = $tmpUser->username;
+	}
+	$title = "header=[#text('AUDIT_DATA')]cssheader=[tooltip_header]cssbody=[tooltip_body]delay=[1000]body=";
+	$title = $title . "[#text('CREATED_BY') <b>" . $username . "</b> #text('ON_DAY') <i>" . $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_date_created;
+	if ($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_date_modified) {
+		if ($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_usr_modified_id == 0) {
+			$username = #textPHP('ANONYMOUS');
+		} else { 			
+			$tmpUser =& JUser::getInstance((int)$result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_usr_modified_id);
+			$username = $tmpUser->username;
+		}
+		$title = $title . "</i><br>" . #textPHP('MODIFIED_BY') . <b>" . $username . "</b> " . #text('ON_DAY') . " <i>" . $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_date_modified;
+	}
+	$title = $title . "</i>]";
+?>
+				title="<?php echo $title ?>"
+#end
+			
+#macro (renderStandardViewForm)
+#############################################################################################
+########################################## a view form ######################################
+			<table>
+#renderView($entity.name)
+#parse("defs/entity/audit.php")
+				<tr>
+					<td colspan="99" align="center">
+#parse("defs/entity/params.php")
+#actionButtonSimple("Close" "CLOSE")
+					</td>
+				</tr>
+			</table>
+########################################## a view form ######################################
+#############################################################################################
+#end
+
+#macro (permissionRestrictedBlockBeginClass $action)	
+			$portletObject = self::getMyPortletObject();
+			if (isset($portletObject) && $portletObject->canExecute("$action")) {
+#end
+
+#macro (permissionRestrictedBlockBegin $action)	
+			if ($this->canExecute("$action")) {
+#end
+	
+#macro (permissionRestrictedBlockEnd)
+			}
+#end	
+	
+#macro (renderLabel $property $check $type)
+#if ($check)
+<?php
+	if (true) { //$componentParams->get('show_form_${tr.f_v($property.name)}') == "1") {
+?>
+#end
+#if ($property.obligatory)* #else <?php echo P('show_${type}_${tr.f_v($property.name)}_obligatory', "0") == "1" ? "* " : "" ?>#end
+#parseFileWithStandardText("modules_project/renderLabel/${tr.f_v($entity.name)}/${tr.f_v($property.name)}.php" "<?php echo T('${tr.F_V($property.name)}') ?>")#if ($check)
+<?php
+	}
+?>
+#end
+#end
+
+#macro (renderField $property $check $type)
+#if ($check)
+<?php
+	if (true) { //$componentParams->get('show_${type}_${tr.f_v($property.name)}') == "1") {
+?>
+#end
+#renderInput()					
+#parseFile("modules_project/${type}AfterField/${tr.f_v($entity.name)}/${tr.f_v($property.name)}.php")
+#if ($check)
+<?php
+	}
+?>
+#end
+#end
+
+#* Do uzycia w insteadsach*#
+#macro (renderLabelByName $propertyName) 
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+<?php
+	if (true) { //$componentParams->get('show_form_${tr.f_v($property.name)}') == "1") {
+?>
+#parseFileWithStandardText("modules_project/renderLabel/${tr.f_v($entity.name)}/${tr.f_v($property.name)}.php" "<?php echo T('${tr.F_V($property.name)}') ?>")
+#if ($property.obligatory)
+*
+#else
+<?php echo P('show_form_${tr.f_v($property.name)}_obligatory', "0") == "1" ? "* " : "" ?>
+#end
+<?php
+	}
+?>
+#end
+#end
+#end
+
+#macro (labelOnly $propertyName)
+#set ($juz = 0)
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+#set ($juz = 1)
+<span class="fieldlabel">${tr.Fv($property.name)}</span>
+#end
+#end
+#if ($juz == 0) 
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($propertyName)})
+#set ($juz = 1)
+<span class="fieldlabel">${tr.Fv($relation.parentEntity.name)}</span>
+#end
+#end
+#end
+#if ($juz == 0) 
+<span class="fieldlabel">${tr.Fv($propertyName)}</span>
+#end
+#end
+
+#macro (memberOutputEntity $propertyName $entityName $entityPrefix)
+<?php echo $result${tr.FV($entityName)}->${tr.f_v($entityPrefix)}_${tr.f_v($propertyName)} ?>
+#end
+
+#macro (memberOutput $propertyName)
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} ?>
+#end
+#end
+#end
+	
+#macro (labelAndMember $propertyName)
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+<span class="fieldlabel">${tr.Fv($property.name)}:</span>
+<span class="value"><?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} ?></span>
+#end
+#end
+#end
+
+#macro (labelAndParent $parentEntityName)
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)})
+<span class="fieldlabel">${tr.Fv($relation.parentEntity.name)}:</span>
+<?php
+#if ($relation.name)		
+			$parentId = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id;
+#else
+			$parentId = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id;
+#end
+			$parent${tr.FV($relation.parentEntity.name)} = new ${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}();
+			$parentValue = $parent${tr.FV($relation.parentEntity.name)}->lookup($parentId);
+?>
+<span class="value"><?php echo $parentValue ?></span>
+#end
+#end
+#end
+
+#macro (labelAndMethod $methodName)
+<span class="fieldlabel">${tr.Fv($methodName)}:</span>
+<span class="value"><?php echo $result${tr.FV($entity.name)}->get${tr.FV($methodName)}() ?></span>
+#end
+
+## to jest jednak bez sensu, trzeba zrobic renderOutput bez td i il
+#macro (propertyOutput $propertyName)
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+#renderOutput($property.dataType.name)
+#end
+#end
+#end
+	
+#macro (parentOutput $parentEntityName)
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)})
+<?php
+#if ($relation.name)		
+			$parentId = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id;
+#else
+			$parentId = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id;
+#end
+			$parent${tr.FV($relation.parentEntity.name)} = new ${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}();
+			$parentValue = $parent${tr.FV($relation.parentEntity.name)}->lookup($parentId);
+?>
+<?php echo $parentValue ?>
+<?php
+	if ($${tr.fV($entity.name)}DisplayMode == "FORM") {
+?>
+		<input type="hidden" id="${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>" name="${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>" value="<?php echo $parentId ?>">
+<?php
+	}
+?>
+#end
+#end
+#end
+
+#macro (renderFieldByNameLabelOptional $propertyName $mode $showLabel)
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+<?php
+	if (P('show_${mode}_${tr.f_v($property.name)}', "1") == "1" || P('show_${mode}_${tr.f_v($property.name)}', "1") == "2") {
+?>
+#if ($showLabel == 'true')	
+<label align="right" nowrap class="fieldlabel #if ($property.obligatory) obligatory #else <?php echo P('show_form_${tr.f_v($property.name)}_obligatory', "0") == "1" ? " obligatory " : "" ?> #end" for="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo isset($result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_id) ? $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_id : '' ?>">
+#parseFileWithStandardText("modules_project/renderLabel/${tr.f_v($entity.name)}/${tr.f_v($property.name)}.php" "<?php echo T('${tr.F_V($property.name)}') ?>")
+#if ($property.obligatory)
+ *
+#else
+<?php echo P('show_form_${tr.f_v($property.name)}_obligatory', "0") == "1" ? "* " : "" ?>
+#end
+</label>
+#end
+<?php
+	if (P('show_${mode}_${tr.f_v($property.name)}', "1") == "2") {
+?>
+#renderDataView()
+<?php
+	} else {
+?>
+#renderInput()
+<?php
+	}
+?>
+#parseFile("modules_project/afterField/${tr.f_v($entity.name)}/${tr.f_v($property.name)}.php")
+<?php
+	}
+?>
+#end
+#end
+#end
+
+#macro (renderParentDataViewOfCurrentRelation)	
+<?php
+			$tmpId = null;
+			if (!is_null($context) && isset($context['${relation.parentEntity.prefix}_id'])) {
+				$tmpId = $context['${relation.parentEntity.prefix}_id'];
+			}
+			$readOnly = "";
+			if ($result${tr.FV($entity.name)}->getId() == 0) {
+// przesuac do createforgui				$result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id = $tmpId;
+			}
+			$parentId = $result${tr.FV($entity.name)}->get${tr.FV($relation.parentEntity.name)}${tr.FV($relation.name)}Id();
+			$parentValue = ${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}::lookup($parentId);
+				
+?>
+##					<input class="inputbox readonly" style="border: yellow 1 solid;" value="<?php echo $parentValue ?>" readonly="readonly">
+## no to w koncu to moze byc spanem czy nie? Moze, ale trzeba tez jako hidden podac wartosc
+					<input
+						type="hidden"
+						id="${tr.fV($relation.childEntity.prefix)}_${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo isset($result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id) ? $result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id : '' ?>" 
+						name="${tr.fV($relation.childEntity.prefix)}_${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo isset($result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id) ? $result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id : '' ?>" 						
+						value="<?php echo $parentId ?>"
+					/>
+					<span class="inputbox readonly"><?php echo $parentValue ?></span>
+#end
+
+#macro (renderParentDataViewByName $parentEntityName $relationName)
+#set ($tmpRelation = $relation)
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)} && ${tr.f_v($relation.name)} == ${tr.f_v($relationName)})
+#renderParentDataViewOfCurrentRelation()
+#end
+#end
+#set ($relation = $tmpRelation)
+#end
+	
+#macro (renderFieldByName $propertyName $mode) #* UWAGA! Swiezo dodany parametr. Jesli templatki sie nie kompiluja, to z tego powodu! *#
+#renderFieldByNameLabelOptional($propertyName $mode 'true')
+#end
+	
+#macro (renderParentByName $parentEntityName $type) #* UWAGA! Swiezo dodany parametr. Jesli templatki sie nie kompiluja, to z tego powodu! *#
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)})
+<?php
+#if ($entity.name != $relation.parentEntity.name && !$relation.name)
+	if (class_exists('${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}') && ((P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "1" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "2" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "3") && !isset($context["${tr.f_v($relation.parentEntity.prefix)}"]))) {
+#else	
+	if (class_exists('${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}') && ((P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "1" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "2" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "3"))) {
+#end
+?>
+					<label align="right" nowrap class="fieldlabel #if ($relation.obligatory) obligatory #else <?php echo P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}_obligatory') == "1" ? " obligatory " : "" ?> #end" for="${tr.fV($relation.childEntity.prefix)}_${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo isset($result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id) ? $result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id : '' ?>">
+#renderParentLabel($type)
+					</label>
+#parentSelect("$type")					
+<?php
+	} else {
+?>
+#parentSelectHidden()					
+<?php
+	}
+?>
+#end
+#end
+#end
+
+#macro (renderParentByNameAndRelation $parentEntityName $relationName $mode) #* UWAGA! Swiezo dodany parametr. Jesli templatki sie nie kompiluja, to z tego powodu! *#
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)} && ${tr.f_v($relation.name)} == ${tr.f_v($relationName)})
+#renderParentSelect($mode)
+#end
+#end
+#end
+
+#macro (renderParentLabelByName $parentEntityName)
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)})
+#renderParentLabel()	
+#end
+#end
+#end
+
+#macro (renderParentLabelByNameAndRelation $parentEntityName $relationName)
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)} && ${tr.f_v($relation.name)} == ${tr.f_v($relationName)})
+#renderParentLabel()	
+#end
+#end
+#end
+	
+#macro (parent $parentEntityName)
+#foreach( $relation in $entity.childRelations )
+#if (${tr.f_v($relation.parentEntity.name)} == ${tr.f_v($parentEntityName)})
+## a co z create?
+#renderParentSelect("form")	
+#end
+#end
+#end
+
+#macro (renderDataByName $propertyName)
+#foreach( $property in $entity.properties )
+#if (${tr.f_v($property.name)} == ${tr.f_v($propertyName)})
+<?php
+	if (true) { //$componentParams->get('show_view_${tr.f_v($property.name)}') == "1") {
+?>
+#renderDataView()					
+<?php
+	}
+?>
+#end
+#end
+#end
+
+#macro (renderParentLabel $type)
+#if ($relation.obligatory)
+ *
+#else
+<?php echo P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}_obligatory') == "1" ? " * " : "" ?>
+#end
+#parseFileWithStandardText("modules_project/renderLabel/${tr.f_v($entity.name)}/${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}.php" "<?php $customLabel = TE('${tr.F_V($relation.parentEntity.name)}_${tr.F_V($relation.name)}'); echo !is_null($customLabel) ? $customLabel : T('${tr.F_V($relation.parentEntity.name)}') . ' ' . T('${tr.F_V($relation.name)}') ?> ")
+#end
+	
+#macro (renderParentSelect $typeP)
+#set($type = $typeP)
+<?php
+#if ($entity.name != $relation.parentEntity.name && !$relation.name)
+	if (class_exists('${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}') && ((P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "1" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "2" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "3") && !isset($context["${tr.f_v($relation.parentEntity.prefix)}"]))) {
+#else	
+	if (class_exists('${tr.f_v($application.name)}\virgo${tr.FV($relation.parentEntity.name)}') && ((P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "1" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "2" || P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}', "1") == "3"))) {
+#end
+?>
+<?php
+	if (!$formsInTable) {
+?>
+	<li
+		<?php echo $floatingFields ? "style='display: inline-block; float: left;'" : '' ?>
+	>
+<?php
+	} else {
+?>
+	<tr><td align="right">
+<?php
+	}
+?>
+					<label align="right" nowrap class="fieldlabel #if ($relation.obligatory) obligatory #else <?php echo P('show_${type}_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}_obligatory') == "1" ? " obligatory " : "" ?> #end" for="${tr.fV($relation.childEntity.prefix)}_${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo isset($result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id) ? $result${tr.FV($relation.childEntity.name)}->${tr.f_v($relation.childEntity.prefix)}_id : '' ?>">
+#renderParentLabel($type)
+					</label>
+<?php
+	if (!$formsInTable) {
+?>
+<?php
+	} else {
+?>
+	</td><td>
+<?php
+	}
+?>
+#parentSelect("$type")					
+<?php
+	if (!$formsInTable) {
+?>
+	</li>
+<?php
+	} else {
+?>
+	</td></tr>
+<?php
+	}
+?>
+<?php
+	} else {
+?>
+#parentSelectHidden()					
+<?php
+	}
+?>
+#end
+	
+#macro (renderComponentByName $entityName)
+#set ($entityCurrent = $entity)
+#foreach( $entity in $application.entities )
+#if ($entity.name == $entityName)
+<?php
+			$result${tr.FV($entity.name)} = new ${tr.f_v($application.name)}\virgo${tr.FV($entity.name)}();
+			if (is_null($whereClause${tr.FV($entity.name)})) {
+				$whereClause${tr.FV($entity.name)} = " 1 = 1 ";
+			}
+?>
+#parse("defs/virgo.php")
+#end
+#end
+#set ($entity = $entityCurrent)
+#end
+
+#* Zaklada, ze <tr> </tr> juz jest a to makro wstawiamy w srodek *#
+#macro (renderProperty $property)
+## a co z create???
+#parseFile("defs/entity/form_property.php") 
+#end
+	
+#macro (label $propertyName)
+#foreach( $property in $entity.properties )
+#if ($property.name == $propertyName)
+#renderLabel($property false "form")
+#end
+#end
+#end
+
+#macro (field $propertyName)
+#foreach( $property in $entity.properties )
+#if ($property.name == $propertyName)
+#renderField($property)
+#end
+#end
+#end
+	
+#macro (property $propertyName)
+#foreach( $property in $entity.properties )
+#if ($property.name == $propertyName)
+#renderProperty($property)
+#end
+#end
+#end
+	
+#macro (exectime_start $text)
+PROFILE('$text');
+## #if ($util.exectime)
+## 			$virgo_debug_${tr.f_v($text)}_time_start = microtime(true);
+## #end
+#end
+	
+#macro (exectime_end $text)
+PROFILE('$text');
+## #if ($util.exectime)
+##			$virgo_debug_${tr.f_v($text)}_time_end = microtime(true);
+##			$virgo_debug_${tr.f_v($text)}_time_total = $virgo_debug_${tr.f_v($text)}_time_total + $virgo_debug_${tr.f_v($text)}_time_end - $virgo_debug_${tr.f_v($text)}_time_start;
+###end
+#end
+	
+#macro (exectime_echo $text)
+#if ($util.exectime)
+			echo "<!-- (DEBUG) $text: $virgo_debug_${tr.f_v($text)}_time_total -->\n";
+#end
+#end
+	
+#macro (exectime_end_echo $text)
+#exectime_end($text)
+#exectime_echo($text)
+#end
+	
+#macro (limitToConfiguredParents)
+#foreach( $relation in $entity.childRelations )
+			$includeNulls = false;
+			$includeIns = true;
+			$limit = P('limit_to_${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}');
+			if (isset($limit) && trim($limit) != '') {
+#if (!$relation.obligatory)			
+				if (strrpos($limit, "empty") !== false) {
+					if (strrpos($limit, "empty,") === false) {
+						$toRemove = "empty";
+					} else {
+						$toRemove = "empty,";
+					}
+					$limit = str_replace($toRemove, "", $limit);
+					$includeNulls = true;
+					$includeIns = (isset($limit) && trim($limit) != '');
+				}
+#end				
+#if ($relation.name)
+#set ($underscore = "_")
+#else
+#set ($underscore = "")
+#end
+				if ($includeIns) {
+					eval("\$limit = \"$limit\";");
+					$inCondition = " ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}${underscore}${tr.f_v($relation.name)}_id IN (" . $limit . ") ";
+				} else {
+					$inCondition = " 1 ";
+				}
+				if ($includeNulls) {
+					if ($inCondition == "") {
+						$nullCondition = "";
+					} else {
+						$nullCondition = " OR ";
+					}
+					$nullCondition = $nullCondition . " ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}${underscore}${tr.f_v($relation.name)}_id IS NULL";
+				} else {
+					$nullCondition = " OR 0 "; ## tu juz rzezba, trzeba by sie nad tym pochylic, ale nie ma czasu
+				}
+				$whereClause${tr.FV($entity.name)} = $whereClause${tr.FV($entity.name)} . " AND ({$inCondition} {$nullCondition} )";
+			}
+#end			
+#end
+
+#########################################################################################################################
+##-------------------------------------------------fillUpFilterCriteria------------------------------------------------##
+#macro (fillUpFilterCriteria)
+			$filter = "";
+			$criteria${tr.FV($entity.name)} = self::getCriteria();
+#foreach( $property in $entity.properties )
+			if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($property.name)}"])) {
+				$fieldCriteria${tr.FV($property.name)} = $criteria${tr.FV($entity.name)}["${tr.f_v($property.name)}"];
+				if ($fieldCriteria${tr.FV($property.name)}["is_null"] == 1) {
+#parseFileWithStandardText("defs/dataTypes/php/createSQLConditionNotNull/${tr.f_v($property.dataType.name)}" "$filter = $filter . ' AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} IS NOT NULL ';")
+				} elseif ($fieldCriteria${tr.FV($property.name)}["is_null"] == 2) {
+#parseFileWithStandardText("defs/dataTypes/php/createSQLConditionNull/${tr.f_v($property.dataType.name)}" "$filter = $filter . ' AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} IS NULL ';")
+				} else {
+					$dataTypeCriteria = $fieldCriteria${tr.FV($property.name)}["value"];
+#parseFile("defs/dataTypes/php/createSQLCondition/${tr.f_v($property.dataType.name)}")
+				}
+			}
+#end
+#foreach( $relation in $entity.childRelations )
+			if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}"])) {
+				$parentCriteria = $criteria${tr.FV($entity.name)}["${tr.f_v($relation.parentEntity.name)}${tr.f_v($relation.name)}"];
+				if ($parentCriteria["is_null"] == 1) {
+#if ($relation.name)	
+					$filter = $filter . " AND ${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id IS NULL ";
+#else
+					$filter = $filter . " AND ${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id IS NULL ";
+#end
+				} else {
+#if ($relation.parentEntity.dictionary)			
+					if (isset($parentCriteria["ids"]) && is_array($parentCriteria["ids"])) {
+				  		$parentIds = $parentCriteria["ids"];
+#if ($relation.name)	
+						$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id IN (" . implode(", ", $parentIds) . ") ";
+#else
+						$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id IN (" . implode(", ", $parentIds) . ") ";
+#end
+					}
+#else
+					if (isset($parentCriteria["value"]) && trim($parentCriteria["value"]) != "") {
+				  		$parent = $parentCriteria["value"];
+#underscore($relation)
+						$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}${_}${tr.f_v($relation.name)}_id IN (SELECT ${tr.f_v($relation.parentEntity.prefix)}_id FROM ${tr.f_v($application.prefix)}_${tr.f_v($relation.parentEntity.namePlural)} WHERE ${tr.f_v($relation.parentEntity.prefix)}_virgo_title LIKE ?) ";
+						$types .= "s";
+						$values[] = $parent;
+					}
+#end	
+				}
+			}
+#end
+#foreach( $relation in $entity.parentRelations )
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+			if (isset($criteria${tr.FV($entity.name)}["${tr.f_v($secondParentRelation.parentEntity.name)}${tr.f_v($relation.name)}"])) {
+				$parentCriteria = $criteria${tr.FV($entity.name)}["${tr.f_v($secondParentRelation.parentEntity.name)}${tr.f_v($relation.name)}"];
+				if (isset($parentCriteria["ids"]) && is_array($parentCriteria["ids"])) {
+					$parentIds = $parentCriteria["ids"];
+					$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_id IN (SELECT second_parent.${tr.f_v($relation.childEntity.prefix)}_${tr.f_v($entity.prefix)}_id FROM ${tr.f_v($application.prefix)}_${tr.f_v($relation.childEntity.namePlural)} AS second_parent WHERE second_parent.${tr.f_v($relation.childEntity.prefix)}_${tr.f_v($secondParentRelation.parentEntity.prefix)}_id IN (" . implode(", ", $parentIds) . ")) ";
+				}
+			}
+#end
+#end
+#end	
+#parseFile("modules_project/extrafillUpFilterCriteria/${tr.f_v($entity.name)}.php") 
+			$whereClause${tr.FV($entity.name)} = $whereClause${tr.FV($entity.name)} . " " . $filter . " ";
+#end
+##-------------------------------------------------fillUpFilterCriteria------------------------------------------------##
+#########################################################################################################################
+
+## To makro zaklada, ze context jest juz wpisany w $whereClause
+#macro (showApplicableOnlyRecords)
+#limitToConfiguredParents()
+#fillUpFilterCriteria()			
+			$customSQL = P('custom_sql_condition');
+			$currentUser = virgoUser::getUser();
+			$currentPage = virgoPage::getCurrentPage();
+			if (isset($customSQL) && trim($customSQL) != '') {
+				$user = virgoUser::getUser();
+				eval("\$customSQL = \"$customSQL\";");
+				$whereClause${tr.FV($entity.name)} = $whereClause${tr.FV($entity.name)} . " AND " . $customSQL . " ";
+			}
+#end
+
+	
+##
+## Algorytm renderowania przyciskow:
+##
+## Parametry:
+##   - action
+##   - label
+##   - id
+##   - condition JS
+##   - alert text
+##   - question text
+##   - extra code JS
+##
+## (1) conditionJS defined?
+##    - YES: 
+##        (2) conditionJS fulfilled?
+##            - YES:
+##                goto (5)
+##            - NO:
+##                (3) alert text with question mark?
+##                    - YES: 
+##                        (4) confirm alert text?
+##                            - YES:
+##                                goto (7)
+##                            - NO:
+##                                return false
+##                    - NO:
+##                        alert, return false
+##    - NO:
+##       (5) questionText defined?
+##           - YES:
+##               (6) confirm questionText?
+##                   - YES: 
+##                       goto (7)
+##                   - NO:
+##                        return false
+##           - NO:
+##               (7) extraCodeJS defined?
+##                   - YES:
+##                       (8) include extra code, goto (9)
+##                   - NO: goto (9)
+##  (9) return true
+#macro (actionButtonAll $action $label $idValuePar $jsCondition $alertText $questionText $extraJsCode $format $url $windowParams $download $class)
+#if ($idValuePar == "")
+#set ($idValue = "<?php echo isset($result${tr.FV($entity.name)}) ? (is_array($result${tr.FV($entity.name)}) ? $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] : $result${tr.FV($entity.name)}->getId()) : '' ?>")
+#else
+#set ($idValue = $idValuePar)
+#end
+#set ($doPermissionCheck = 'true')
+#if ($action == "Close" || $action == "Store" || $action == "StoreAndClear" || $action == "Apply" || $action == "Search" || $action == "Duplicate" || $action == "Clear" ||	$action == "BackFromParent")
+#set ($doPermissionCheck = 'false')
+#end
+## teraz mozna podawac akcje dynamicznie, jako zmienna php:
+#set ($firstLetter = $action.substring(0, 1))
+#if ($firstLetter == "$") 
+#set ($actionPHP = "${action}")
+#set ($actionHTMLFV = "<?php echo ${action} ?>")
+#set ($actionHTMLf_v = "<?php echo ${action} ?>")
+#else
+#set ($actionPHP = "'${action}'")
+#set ($actionHTMLFV = "$action") ## bylo "${tr.FV($action)}")	ale zmienione, bo StoreAndClear tracilo duze litery w srodku
+#set ($actionHTMLf_v = "${tr.f_v($action)}")	
+#end
+#if ($doPermissionCheck != 'false')
+$actionPerEntity.addAction($entity.name, $action)
+<?php
+	$buttonRendered = false;
+	if ($this->canExecute(${actionPHP})) { ## zmienilem ${tr.f_v($action)} na $action zeby mozna bylo dynamicznie wolac...
+		$buttonRendered = true;
+## mozna uzyc, zeby sprawdzic czy jakikolwiek button byl renderowany od czasu ustawienia $anythingRendered na false		
+		$anythingRendered = true;
+?>
+#end
+<div class="button_wrapper button_wrapper_${actionHTMLf_v} inlineBlock"><input ## zmienilem ${tr.f_v($action)} na $action zeby mozna bylo dynamicznie wolac...
+							name="submit_button" 
+							class="button btn $class #if ($rowAction == 'TRUE') btn-mini #end" 
+#if ($download == "true")							
+							type="button" 
+#else
+							type="submit" 
+#end
+							onclick="
+#if ($jsCondition != "")
+								if ($jsCondition) {
+#if ($questionText != "")
+									if (!confirm(decodeURIComponent('$questionText'))) return false;
+#end
+								} else {
+#if ($alertText != "")
+									var alertText = '#text("$alertText")';
+									if (alertText.charAt(alertText.length-1)=='?') {
+										if (!confirm(alertText)) return false;
+									} else {
+										alert(alertText); return false;
+									}
+#end
+								}
+#else
+#if ($questionText != "")
+									if (!confirm(decodeURIComponent('$questionText'))) return false;
+#end
+#end
+#if ($download == "true")							
+								var form = document.getElementById('portlet_form_download_<?php echo $this->getId() ?>');
+								var children = form.getElementsByTagName('input');
+								var found = 0;
+								for(var i = 0; i< children.length;i++) {
+								  if (children[i].getAttribute('name') == '${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>') {
+									found = 1;
+								  }
+								}
+								if (found == 0) {
+								  var input = document.createElement('input');
+								  input.setAttribute('type', 'hidden');
+								  input.setAttribute('name', '${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>');
+								  input.setAttribute('value', '');
+								  form.appendChild(input);
+								} else {
+#setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "''")
+								}
+#else
+								var form = this.form;
+#end								
+								form.action = '';
+								form.portlet_action.value='$actionHTMLFV';
+#setFormFieldValue("'${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>'" "'$idValue'")
+$extraJsCode
+#if ($windowParams != "")
+ 								var w = window.open('about:blank','virgo_Popup_Window','$windowParams');form.target = 'virgo_Popup_Window';
+#else
+ 								form.target = '';
+#if ($download == "true")							
+								form.submit();
+								return false;
+#end 								
+#end
+							" 
+							value="#text($label)"
+						/><div class="button_right"></div></div>#if ($doPermissionCheck != 'false')
+<?php
+	}
+?>
+#end
+#end
+	
+#macro (actionButton $action $label $idValue $jsCondition $alertText $questionText $extraJsCode)
+#actionButtonAll($action $label $idValue $jsCondition $alertText $questionText $extraJsCode "html" "" "" "" "")
+#end
+
+#macro (actionButtonDownload $action $label $idValue $jsCondition $alertText $questionText $extraJsCode)
+#actionButtonAll($action $label $idValue $jsCondition $alertText $questionText $extraJsCode "html" "" "" "true" "")
+#end
+
+#macro (actionButtonSimple $action $label)
+#actionButton($action $label "" "" "" "" "")
+#end
+	
+#macro (actionButtonSimpleClass $action $label $class)
+#actionButtonAll($action $label "" "" "" "" "" "html" "" "" "" $class)
+#end
+
+#macro (actionButtonSimpleDownload $action $label)
+#actionButtonDownload($action $label "" "" "" "" "")
+#end
+
+#macro (actionButtonDisplayMode $mode $label)
+#actionButton("CustomMode" $label "" "" "" "" "this.form.componentName.value='$mode';")
+#end
+
+#macro (actionButtonFormat $label $format $appender)
+#actionButtonAll("" $label "" "" "" "" "this.form.componentName.value='com_${tr.f_v($application.prefix)}_${tr.f_v($entity.name)}'; this.form.contentClass.value='$appender';" $format "" "" "" "") 
+#end
+	
+#macro (actionButtonConfirmation $action $label $questionText)
+#actionButton($action $label "" "" "" $questionText "")
+#end
+	
+#macro (actionButtonSelected $action $label $questionText)
+#actionButton($action $label "" "!nothingSelected(this.form, <?php echo $this->getId() ?>)" "'NOTHING_SELECTED'" $questionText "copyIds(form, <?php echo $this->getId() ?>);")
+#end
+
+
+#macro (actionDisabled $label) <div class="button_wrapper inlineBlock"><input type="submit" disabled class="button button_disabled btn btn-mini" value="#text($label)"><div class="button_right button_disabled"></div></div>#end
+	
+#macro (parentSelectForRelation $relationToRenderP $typeP)
+#set ($relationToRender = $relationToRenderP)
+#set ($type = $typeP)
+#if ($relationToRender.name)
+#parseFileWithStandard("modules_project/parentSelect/${tr.f_v($entity.name)}/${tr.f_v($relationToRender.parentEntity.name)}_${tr.f_v($relationToRender.name)}.php" "defs/entity/parent_select.php")
+#else
+#parseFileWithStandard("modules_project/parentSelect/${tr.f_v($entity.name)}/${tr.f_v($relationToRender.parentEntity.name)}.php" "defs/entity/parent_select.php")
+#end
+#end
+
+#macro (parentSelect $type)
+#parentSelectForRelation($relation $type)
+#end
+	
+#macro (parentSelectHidden)
+<?php
+	if (isset($context["${tr.f_v($relation.parentEntity.prefix)}"])) {
+		$parentValue = $context["${tr.f_v($relation.parentEntity.prefix)}"];
+	} else {
+#if ($relation.name)
+		$parentValue = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id;
+#else
+		$parentValue = $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id;
+#end
+	}
+	
+?>
+				<input type="hidden" id="${tr.fV($entity.prefix)}_${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>" name="${tr.fV($entity.prefix)}_${tr.fV($relation.parentEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>" value="<?php echo $parentValue ?>">
+#end
+	
+#macro (preventExit)
+<script language="JavaScript">
+  window.onbeforeunload = confirmExit;
+  function confirmExit() {
+	  var checks = document.getElementsByName("virgo_changed");
+	  for (var i=0; i < checks.length; i++) {
+		  var check = checks.item(i);
+		  if (check.form.name == "virgo_form_${tr.f_v($entity.name)}") {
+			  if (check.value == 'T') {
+				  return "<?php echo T('ARE_YOU_SURE_YOU_WANT_DISCARD') ?>";
+			  }
+		  }
+        }
+  }
+</script>
+#end
+	
+#macro (createTable)
+CREATE TABLE IF NOT EXISTS `${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}` (
+  `${tr.f_v($entity.prefix)}_id` bigint(20) unsigned NOT NULL auto_increment,
+  `${tr.f_v($entity.prefix)}_virgo_state` varchar(50) default NULL,
+  `${tr.f_v($entity.prefix)}_virgo_title` varchar(255) default NULL,
+#if ($entity.dictionary)
+  `${tr.f_v($entity.prefix)}_virgo_deleted` boolean,
+#end
+#foreach( $relation in $entity.childRelations )
+#if ($relation.name && $relation.name != "null")
+	`${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id` int(11) default NULL,
+#else
+	`${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id` int(11) default NULL,
+#end
+#end
+#foreach( $property in $entity.properties )
+#parse("defs/dataTypes/sql/${tr.f_v($property.dataType.name)}.sql") 
+#end
+  `${entity.prefix}_date_created` datetime NOT NULL,
+  `${entity.prefix}_date_modified` datetime default NULL,
+  `${entity.prefix}_usr_created_id` int(11) NOT NULL,
+  `${entity.prefix}_usr_modified_id` int(11) default NULL,
+#foreach( $relation in $entity.childRelations )
+#if ($relation.name && $relation.name != "null")
+  KEY `${entity.prefix}_${tr.f_v($relation.parentEntity.prefix)}_${relation.name}_fk` (`${entity.prefix}_${relation.parentEntity.prefix}_${tr.f_v($relation.name)}_id`),
+#else
+  KEY `${entity.prefix}_${tr.f_v($relation.parentEntity.prefix)}_fk` (`${entity.prefix}_${relation.parentEntity.prefix}_id`),
+#end
+#end
+  PRIMARY KEY  (`${entity.prefix}_id`)
+#if ($entity.dictionary)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+#else 
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+#end
+/* 
+	Example row to put in modules_project/initData/${tr.f_v($entity.name)}.sql 
+INSERT INTO `${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}` (`${tr.f_v($entity.prefix)}_virgo_title`#foreach ($property in $entity.properties), `${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}`#end) 
+VALUES (title#foreach ($property in $entity.properties), some_value#end);
+*/
+#parseFile("modules_project/initData/${tr.f_v($entity.name)}.sql") 
+#end
+	
+#macro (createHistoryTable)
+CREATE TABLE `${tr.f_v($application.prefix)}_history_${tr.f_v($entity.namePlural)}` (
+  id bigint(20) unsigned NOT NULL auto_increment,
+  revision INT default NULL,
+  ip VARCHAR(255) default NULL,
+  username VARCHAR(255) default NULL,
+  user_id INT(11) default NULL,
+  timestamp TIMESTAMP,
+  audit_username VARCHAR(255) default NULL,
+  audit_user_id INT(11) default NULL,
+  audit_description VARCHAR(2000) default NULL,
+  nullified_properties VARCHAR(2000) default NULL,
+  `${tr.f_v($entity.prefix)}_id` bigint(20) unsigned NOT NULL,
+##  `${tr.f_v($entity.prefix)}_virgo_state` varchar(50) default NULL,
+##  `${tr.f_v($entity.prefix)}_virgo_title` varchar(255) default NULL,
+#foreach( $relation in $entity.childRelations )
+#if ($relation.name && $relation.name != "null")
+	`${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_${tr.f_v($relation.name)}_id` int(11) default NULL,
+#else
+	`${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}_id` int(11) default NULL,
+#end
+#end
+#foreach( $property in $entity.properties )
+#parse("defs/dataTypes/sql/${tr.f_v($property.dataType.name)}.sql") 
+#end
+  PRIMARY KEY  (id)
+) ENGINE=Archive AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+#end
+
+#macro (orderFields)
+	#foreach ($orderedFieldName in $orderedFieldsNames)
+		#set ($tmpFieldName = $orderedFieldName.substring(0, 2))
+		#if ($tmpFieldName == "P:")
+			#foreach ($tmpProperty in $entity.properties)
+				#set ($tmpNameFieldName = "P:${tr.f_v($tmpProperty.name)}")
+				#if ($tmpNameFieldName == $orderedFieldName)
+					#set ($dummy = $orderedFields.add($tmpProperty))	
+				#end
+			#end
+		#elseif ($tmpFieldName == "R:")
+			#foreach ($tmpRelation in $entity.childRelations)
+				#set ($tmpNameFieldName = "R:${tr.f_v($tmpRelation.parentEntity.name)}${tr.f_v($tmpRelation.name)}")
+				#if ($tmpNameFieldName == $orderedFieldName)
+					#set ($dummy = $orderedFields.add($tmpRelation))	
+				#end
+			#end
+		#elseif ($tmpFieldName == "F:")
+			#set ($dummy = $orderedFields.add($orderedFieldName))
+		#end
+	#end
+	#if ($orderedFields.size() == 0)
+		#foreach ($tmpRelation in $entity.childRelations)
+			#if ($tmpRelation.identifying)
+				#set ($dummy = $orderedFields.add($tmpRelation))
+			#end
+		#end
+		#foreach ($tmpProperty in $entity.properties)
+			#set ($dummy = $orderedFields.add($tmpProperty))
+		#end
+		#foreach ($tmpRelation in $entity.childRelations)
+			#if (!$tmpRelation.identifying)
+				#set ($dummy = $orderedFields.add($tmpRelation))	
+			#end
+		#end
+	#end
+#end
+
+#macro(revisionField $field)
+		<tr>
+			<td align="right" class="data_table_header meta">
+				<span class="header"><?php echo T('${tr.F_V($field)}') ?></span>
+			</td>
+			<td align="center" class="meta">
+				<?php echo htmlentities($afterRevision > 1 ? $result['${tr.f_v($field)}'] : "", ENT_QUOTES, "UTF-8") ?>
+			</td>
+			<td align="center" class="meta">
+						<?php echo htmlentities($afterResult['${tr.f_v($field)}'], ENT_QUOTES, "UTF-8") ?>
+			</td>
+		</tr>
+#end
+	
+#macro(getParamValue $customProperty $propParamName)
+#set ($virgoWartosc = "")
+#foreach($tmpParam in $customProperty.split("_"))
+#set ($und = $tmpParam.indexOf(':'))
+#set ($virgoNazwa = $tmpParam.substring(0, $und))
+#set ($und = $und + 1)
+#set ($tmpVirgoWartosc = $tmpParam.substring($und))
+#if ($virgoNazwa == $propParamName)
+#set ($virgoWartosc = $tmpVirgoWartosc)
+#end
+#end
+#end
+
+#macro (readSyncValues)
+#set ($sync = "0")
+#set ($syncUsername = "0")
+#set ($syncPassword = "0")
+#set ($syncEmail = "0")
+#getParamValue($property.customProperty "SyncUsername")
+#if ($virgoWartosc != "")
+#set ($sync = "1")
+#set ($syncUsername = "1")
+#end
+#getParamValue($property.customProperty "SyncPassword")
+#if ($virgoWartosc != "")
+#set ($sync = "1")
+#set ($syncPassword = "1")
+#end
+#getParamValue($property.customProperty "SyncEmail")
+#if ($virgoWartosc != "")
+#set ($sync = "1")
+#set ($syncEmail = "1")
+#end
+#end
+
+#macro (gallery $childEntity)
+#foreach ($property in $childEntity.properties)
+#if (${tr.f_v($property.dataType.name)} == 'image')
+#set ($imageColumnName = ${tr.f_v($property.name)})
+#end
+#end
+<script type="text/javascript">
+function f_clientWidth() {
+	return f_filterResults (
+		window.innerWidth ? window.innerWidth : 0,
+		document.documentElement ? document.documentElement.clientWidth : 0,
+		document.body ? document.body.clientWidth : 0
+	);
+}
+function f_clientHeight() {
+	return f_filterResults (
+		window.innerHeight ? window.innerHeight : 0,
+		document.documentElement ? document.documentElement.clientHeight : 0,
+		document.body ? document.body.clientHeight : 0
+	);
+}
+function f_scrollLeft() {
+	return f_filterResults (
+		window.pageXOffset ? window.pageXOffset : 0,
+		document.documentElement ? document.documentElement.scrollLeft : 0,
+		document.body ? document.body.scrollLeft : 0
+	);
+}
+function f_scrollTop() {
+	return f_filterResults (
+		window.pageYOffset ? window.pageYOffset : 0,
+		document.documentElement ? document.documentElement.scrollTop : 0,
+		document.body ? document.body.scrollTop : 0
+	);
+}
+function f_filterResults(n_win, n_docel, n_body) {
+	var n_result = n_win ? n_win : 0;
+	if (n_docel && (!n_result || (n_result > n_docel)))
+		n_result = n_docel;
+	return n_body && (!n_result || (n_result > n_body)) ? n_body : n_result;
+}
+function hideImageView() {
+  document.getElementById('virgo_full_view').src='';
+  document.getElementById('virgo_full_view_table').style.display='none';
+  document.getElementById('virgo_cover').style.display='none';
+}
+function showImageView(src) {
+  var tb = document.getElementById('virgo_full_view_table');
+  var im = document.getElementById('virgo_full_view');
+  var td = document.getElementById('virgo_full_view_td');
+  var cv = document.getElementById('virgo_cover');
+  td.width = f_clientWidth();
+  td.height = f_clientHeight();
+  cv.style.width = td.width + 'px';
+  cv.style.height = td.height + 'px';
+  tb.style.top = f_scrollTop() + 'px';
+  cv.style.top = tb.style.top;
+  im.src=src;
+  tb.style.display='block';
+  cv.style.display='block';
+}
+</script>
+<div class="gallery">
+<h4><?php echo T('${tr.f_v($childEntity.namePlural)}')  ?></h4>
+<div id="virgo_cover" style="display: none; position: absolute; top: 0px; left: 0px; background-color: #000; opacity: 0.85;"></div>
+<table id="virgo_full_view_table" style="display: none; position: absolute; top: 0px; left: 0px;" onclick="hideImageView()">
+	<tr>
+		<td id="virgo_full_view_td" align="center" valign="middle">
+			<img id="virgo_full_view" class="full_view"/>
+		</td>
+	</tr>
+</table>
+<?php	
+	foreach ($result${tr.FV($entity.name)}->get${tr.FV($childEntity.namePlural)}() as $${tr.fV($childEntity.name)}) {
+?>
+		<img 
+			src="/index.php/${tr.f_v($childEntity.namePlural)}?virgo_show_image_property=${imageColumnName}&virgo_show_image_id=<?php echo $${tr.fV($childEntity.name)}->getId() ?>&virgo_thumbnail=true&virgo_max_image_size=100"
+			onclick="showImageView('/index.php/${tr.f_v($childEntity.namePlural)}?virgo_show_image_property=${imageColumnName}&virgo_show_image_id=<?php echo $${tr.fV($childEntity.name)}->getId() ?>')"
+			class="thumbnail"
+		/>
+<?php
+	}
+?>
+</div>
+#end
+
+#macro (getParentsInContext)
+## ------------------------------------------------ ##
+## Tu potrzebny jest kod, ktory zdobedzie informacje 
+## o wszystkich naszych parentach, ktorzy maja 
+## ustawiony swoj kontekst.
+## No to moze struktura $parentsInContext['className'] = id?
+## ------------------------------------------------ ##
+	if (!isset($parentsInContext)) {
+		$parentsInContext = array();
+		$parentPobIds = PN('parent_entity_pob_id');
+		foreach ($parentPobIds as $parentPobId) {
+			$portletObject = new portal\virgoPortletObject($parentPobId);
+			$className = $portletObject->getPortletDefinition()->getNamespace().'\\'.$portletObject->getPortletDefinition()->getAlias();
+			$tmp2Id = $className::getRemoteContextId($parentPobId);
+			if (isset($tmp2Id)) {
+				$parentsInContext[$className] = $tmp2Id;
+			}
+		}
+	}
+#end
+
+#macro (renderToken)
+<?php
+PROFILE('token');
+	if (isset($result${tr.FV($entity.name)})) {
+		$tmpId = is_array($result${tr.FV($entity.name)}) ? $result${tr.FV($entity.name)}['${tr.f_v($entity.prefix)}_id'] : $result${tr.FV($entity.name)}->getId();
+		if (isset($tmpId)) {
+?>
+<input type="hidden" name="<?php echo getTokenName($tmpId) ?>" value="<?php echo getTokenValue($tmpId) ?>"/>
+<?php
+		}
+	}
+PROFILE('token');
+?>
+#end
+
+#macro (getStatusEntityWithWorkflow)
+#set ($statusEntity = false)
+## sprawdz czy ma parenta, ktory jest slownikiem!
+## Zakladamy, ze dana encja moze miec tylko jeden rodzaj statusu (jeden przycisk 'Zmien status') A moze nie?
+#foreach( $relation in $entity.childRelations )
+#if ($entity.name != $relation.parentEntity.name)
+#if ($relation.parentEntity.dictionary)
+## sprawdz, czy ten parent entity jest podwojnym parentem ("prev", "next") encji o tej samej nazwie z dodanym " workflow"
+#set ($hasPrevRelation = 'false')
+#set ($hasNextRelation = 'false')
+#foreach( $testrelation in $relation.parentEntity.parentRelations )
+#set ($testName = "$relation.parentEntity.name workflow")
+#if ($testrelation.childEntity.name == $testName && $testrelation.name == "prev")
+#set ($hasPrevRelation = 'true')
+#end
+#if ($testrelation.childEntity.name == $testName && $testrelation.name == "next")
+#set ($hasNextRelation = 'true')
+#end
+## No coz, to i tak moze byc tylko jedna encja w calym foreach (jesli to faktycznie workflow), wiec wysarczy zapamietac "ostatnia"
+#set ($statusWorkflowEntity = $testrelation.childEntity)
+#end
+#if ($hasPrevRelation == 'true' && $hasNextRelation == 'true' && $entity.name != $testName)
+#set ($statusEntity = $relation.parentEntity)
+#end
+#end
+#end
+#end
+#end
+
+#macro (insertLifecycleHistoryInternal $statusEntity)
+			$ret = Q("INSERT INTO ${tr.f_v($application.prefix)}_${tr.f_v($statusEntity.name)}_history (${tr.f_v($entity.prefix)}_id, ${tr.f_v($statusEntity.prefix)}_id, username, change_timestamp) VALUES ({$virgo->${tr.f_v($entity.prefix)}_id}, {$virgo->${tr.f_v($entity.prefix)}_${tr.f_v($statusEntity.prefix)}_id}, '{$username}', CURRENT_TIMESTAMP) ");
+#end
+			
+#macro (insertLifecycleHistory $statusEntity)
+		if (!isset($virgoOld) || $virgoOld->${tr.f_v($entity.prefix)}_${tr.f_v($statusEntity.prefix)}_id != $virgo->${tr.f_v($entity.prefix)}_${tr.f_v($statusEntity.prefix)}_id) {
+#parseFile("modules_project/onStatusChange/${tr.f_v($entity.name)}.php")
+## i dla poszczegolnych przejsc:
+			$triggerName = "onStatusChangeTo_{$virgo->${tr.f_v($entity.prefix)}_${tr.f_v($statusEntity.prefix)}_id}";
+			if (method_exists($this, $triggerName)) {
+				$ret = $this->$triggerName();
+				if (isset($ret) && $ret != "") {
+					return $ret;
+				}
+			}
+			$oldStateId = (isset($virgoOld) ? $virgoOld->${tr.f_v($entity.prefix)}_${tr.f_v($statusEntity.prefix)}_id : "");
+			$triggerName = "onStatusChange_{$oldStateId}_{$virgo->${tr.f_v($entity.prefix)}_${tr.f_v($statusEntity.prefix)}_id}";
+			if (method_exists($this, $triggerName)) {
+				$ret = $this->$triggerName();
+				if (isset($ret) && $ret != "") {
+					return $ret;
+				}
+			}
+			$username = virgoUser::getUser()->getUsername();
+#insertLifecycleHistoryInternal($statusEntity)
+			if (!$ret) {
+##	troche to naiwne, ale probujmy bez wzgledu na powod bledu...			if (mysql_errno() == 1146) {
+					Q("CREATE TABLE IF NOT EXISTS ${tr.f_v($application.prefix)}_${tr.f_v($statusEntity.name)}_history (${tr.f_v($entity.prefix)}_id int(11) NOT NULL, ${tr.f_v($statusEntity.prefix)}_id int(11) NOT NULL, username varchar(255) NOT NULL, change_timestamp timestamp NOT NULL)");
+#insertLifecycleHistoryInternal($statusEntity)
+					if (!$ret) {
+						L('While storing status history: ' . mysql_error(), '', 'ERROR');
+					}
+##				}
+			}
+		}
+#end
+
+#macro (viewLifecycleHistoryInternal $statusEntity)
+		if ($rows = QR("SELECT ${tr.f_v($statusEntity.prefix)}_virgo_title, username, change_timestamp FROM ${tr.f_v($application.prefix)}_${tr.f_v($statusEntity.name)}_history h LEFT OUTER JOIN ${tr.f_v($application.prefix)}_${tr.f_v($statusEntity.namePlural)} s ON s.${tr.f_v($statusEntity.prefix)}_id = h.${tr.f_v($statusEntity.prefix)}_id WHERE h.${tr.f_v($entity.prefix)}_id = {$result${tr.FV($entity.name)}->getId()} ORDER BY change_timestamp DESC ", false, false)) {
+			foreach ($rows as $row) {
+?>	
+		<tr class="data_table_odd">
+			<td>
+				<?php echo $row['change_timestamp'] ?>
+			</td>
+			<td>
+				<?php echo $row['username'] ?>
+			</td>
+			<td>
+				<?php echo $row['${tr.f_v($statusEntity.prefix)}_virgo_title'] ?>
+			</td>
+		</tr>
+<?php		
+			}
+			$ret = true;
+		} else {
+			$ret = false;
+		}
+#end
+
+#macro (viewLifecycleHistory $statusEntity)
+<fieldset class="lifecycle_history">
+	<legend>${tr.Fv($statusEntity.name)} history</legend>
+	<table class="lifecycle_history data_table" cellspacing="0">
+<?php
+#viewLifecycleHistoryInternal($statusEntity)
+	if (!$ret) {
+		if (mysql_errno() == 1146) {
+			Q("CREATE TABLE IF NOT EXISTS ${tr.f_v($application.prefix)}_${tr.f_v($statusEntity.name)}_history (${tr.f_v($entity.prefix)}_id int(11) NOT NULL, ${tr.f_v($statusEntity.prefix)}_id int(11) NOT NULL, username varchar(255) NOT NULL, change_timestamp timestamp NOT NULL)");
+			#viewLifecycleHistoryInternal($statusEntity)
+		}
+	}
+?>	
+	</table>
+</fieldset>
+#end
+#macro (ro $namespace $class)
+require_once(PORTAL_PATH .DIRECTORY_SEPARATOR.'portlets'.DIRECTORY_SEPARATOR.'$namespace'.DIRECTORY_SEPARATOR.'virgo${tr.FV($class)}'.DIRECTORY_SEPARATOR.'controller.php');
+#end
+#macro (calculateDefaultValue)
+	if ($defaultValue == -1) {
+		$loggedInUserId = virgoUser::getUserId();
+		$parentCreatedByLoggedInUser = virgo${tr.FV($relation.parentEntity.name)}::getRecordCreatedBy($loggedInUserId);
+		if (isset($parentCreatedByLoggedInUser) && !is_null($parentCreatedByLoggedInUser->getId())) {
+			$defaultValue = $parentCreatedByLoggedInUser->getId();
+		} else {
+			$defaultValue = null;
+		}
+	} elseif ($defaultValue == -2) {
+#if ($relation.name)
+#set ($underscore = "_")
+#else
+#set ($underscore = "")
+#end
+##	$tmpToken = R('${tr.f_v($entity.prefix)}_${tr.f_v($relation.parentEntity.prefix)}${underscore}${tr.f_v($relation.name)}_id');
+		$tmpToken = R('_t');
+		$defaultValue = virgo${tr.FV($relation.parentEntity.name)}::token2Id($tmpToken);
+	}
+#end
+
+#macro (onClickContextChange)
+## To jest kompletny madness. Trzeba to dobrze okomentowac. 
+## Komentarze w zasadzie sa na 3 poziomach: virgo, PHP i JS 
+## A wiec tak, chodzi o to, ze chcemy, zeby po kliknieciu pojedynczym lub podwojnym wywolywaly sie skonfigurowane akcje. Do obslugi tych
+##   klikow sluzy ten kod z timerem, clicks i setTimeout, czyli praktycznie wszystko to javascript, co jest ponizej
+## Nazwa jednej akcji jest w zmiennej $actionOnRowClick a drugiej w $actionOnRowDoubleClick
+## No dobra, ale to niestety nie koniec. Jesli ta akcja to Select, to zamiast normalnego wywolania form.submit() czy ajaxSubmit() musimy 
+##    wywolac JSONa!
+## A WSZYSTKO TO MA SENS TYLKO WTEDY GDY AJAX, BO JAK NIE, TO ZAKLADAMY, ZE DZIECI TEZ SIE NIE SA AJAX I SIE NIE ODSWIEZAJA
+## A zatem konkludujac: zalezy to od takich okolicznosci:
+##   ilosc klikow (1, 2) [Javascript] 
+##   rodzaj akcji (submit, json) [PHP]
+##   render portletu (ajax, nie-ajax) [PHP]
+<script type='text/javascript'>
+	var timer = null;
+	var clicks<?php echo $this->getId() ?> = 0;
+	var clicked<?php echo $this->getId() ?> = null;
+${dollar}(document).ready(function() {
+    ${dollar}('form#portlet_form_<?php echo $this->getId() ?> table.data_table td.selectable')
+    .on('click', function(e){
+    	clicked<?php echo $this->getId() ?> = ${dollar}(this);
+        clicks<?php echo $this->getId() ?> = clicks<?php echo $this->getId() ?> + 1;
+        if(clicks<?php echo $this->getId() ?> === 1) {
+######## (1, ?, ?) ###########################        	
+            var rowId = ${dollar}(this).parent().attr('id');
+	    var virgoId = rowId.substring(rowId.indexOf("_")+1);
+## setTimeout, czyli jesli za chwilke (300) nie pojawi sie drugi klik, to wywolaj te funkcje, ktora jest w zmiennej $actionOnRowClick
+            timer = setTimeout(function() {
+            	clicked<?php echo $this->getId() ?>.css('cursor','progress');
+<?php
+		$ajax = $this->getAjax();;
+		if ($actionOnRowClick == "Select" && isset($ajax) && $ajax) {
+######## (1, json, ?) ###########################			
+			$page = virgoPage::getCurrentPage();
+?>
+		${dollar}.getJSON('<?php echo $page->getUrl() ?>?portlet_action=SelectJson&${tr.fV($entity.prefix)}_id_<?php echo $this->getId() ?>=' + virgoId + '&invoked_portlet_object_id=<?php echo $this->getId() ?>&virgo_action_mode_json=T&_virgo_ajax=1', function(data) {
+## console.log(data);
+<?php
+			if (P('form_only') != "4") {
+?>
+			${dollar}('form#portlet_form_<?php echo $this->getId() ?> table.data_table tr.contextClass').removeClass("contextClass");
+<?php
+			}			
+			$childrenToSubmit = array();
+			$childrenToSubmit[$this->getId()] = prepareChildrenToSubmit($this->getId());
+			$childrenToSubmitJSString = str_replace("\"", "'", json_encode($childrenToSubmit/*, JSON_FORCE_OBJECT*/));					
+?>			
+			var childrenToSubmit = <?php echo $childrenToSubmitJSString ?>;
+			var pobId = <?php echo $this->getId() ?>;
+		    	if (childrenToSubmit.hasOwnProperty(pobId)) {
+			    	var currentChildrenToSubmit = childrenToSubmit[pobId];
+			    	if (typeof(currentChildrenToSubmit) !== 'undefined') {
+				    	if (/* mode == "Submit" && */ Object.keys(currentChildrenToSubmit).length > 0) {
+							for (var child in currentChildrenToSubmit) {
+							    if (currentChildrenToSubmit.hasOwnProperty(child)) {
+							    	jsfs(child, "Submit", currentChildrenToSubmit[child]);
+							   }
+							}
+				    	}
+				    }
+				}
+<?php
+		if (P('form_only') != "4") {
+?>
+		if (data) {
+			${dollar}('form#portlet_form_<?php echo $this->getId() ?> table.data_table tr#' + rowId).addClass("contextClass");
+		}
+<?php
+		}
+?>		
+		clicked<?php echo $this->getId() ?>.css('cursor','pointer');        
+		});
+<?php
+		} else {
+######## (1, submit, ?) ###########################			
+?>
+## console.log('pojedynczy ' + rowId);
+		var form=document.getElementById('portlet_form_<?php echo $this->getId() ?>'); 
+		form.portlet_action.value='<?php echo $actionOnRowClick ?>'; 
+		form.${tr.f_v($entity.prefix)}_id_<?php echo $this->getId() ?>.value=virgoId; 
+		form.target = ''; 
+<?php
+			if (is_null($ajax) || (isset($ajax) && !$ajax)) {
+?>					
+		form.submit();
+<?php
+			} else {
+?>					
+		<?php echo JSFS(null, "Submit", true, array()) ?>
+<?php
+			}
+		}
+?>					
+                clicks<?php echo $this->getId() ?> = 0;
+            }, 300);
+        } else {
+######## (2, ?, ?) ###########################        	
+            clearTimeout(timer);
+            var rowId = $(this).parent().attr('id');            
+	    var virgoId = rowId.substring(rowId.indexOf("_")+1);
+## console.log('podwojny! ' + rowId);
+		var form=document.getElementById('portlet_form_<?php echo $this->getId() ?>'); 
+		form.portlet_action.value='<?php echo $actionOnRowDoubleClick ?>'; 
+		form.${tr.f_v($entity.prefix)}_id_<?php echo $this->getId() ?>.value=virgoId; 
+		form.target = ''; 
+<?php
+	global $ajax;
+	if (is_null($ajax) || (isset($ajax) && !$ajax)) {
+?>					
+		form.submit();
+<?php
+	} else {
+?>					
+		<?php echo JSFS() ?>
+<?php
+	}
+?>					
+            clicks<?php echo $this->getId() ?> = 0;
+        }
+    })
+    .on('dblclick', function(e){
+        e.preventDefault();
+    });
+});
+</script>		
+#end
+
+#macro (showRowsSelect)
+<select class="inputbox" name="virgo_show_rows" onChange="this.form.action='';this.form.target='';this.form.virgo_show_page.value='1'; this.form.portlet_action.value='ChangePaging';
+<?php echo JSFS() ?>									
+">
+<?php
+										$paramValue = P('available_page_sizes', "5,10,20,50,all");
+										$pageSizes = preg_split("/,/", $paramValue);
+										foreach ($pageSizes as $pageSize) {
+?>
+										<option value="<?php echo $pageSize ?>" <?php echo ($showRows == $pageSize ? "selected='selected'" : "") ?>><?php echo ($pageSize == 'all' ? #textPHP("ALL") : $pageSize) ?></option>
+<?php											
+										}
+?>
+									</select>
+#end
+
+#macro (renderNMList $mode)
+#foreach( $relation in $entity.parentRelations )
+<?php
+	if (class_exists('${tr.f_v($application.name)}\virgo${tr.FV($relation.childEntity.name)}') && P('show_${mode}_${tr.f_v($relation.childEntity.namePlural)}${tr.f_v($relation.name)}', '1') == "1") {
+?>
+## sprawdz, czy te dzieci to przypadkiem nie jest tabela n:m ktora ma drugiego rodzica -----USUNIETO TEN WARUNEK:", ktory jest slownikiem"
+#set ($childrenRendered = false)
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+#set ($childrenRendered = true)
+<?php
+	if (!$formsInTable) {
+?>
+	<li
+		<?php echo $floatingFields ? "style='display: inline-block; float: left;'" : '' ?>
+	>
+<?php
+	} else {
+?>
+	<tr><td align="right">
+<?php
+	}
+?>
+					<label nowrap class="fieldlabel ${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}" for="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->getId() ?>[]">
+#parseFileWithStandardText("modules_project/renderLabel/${tr.f_v($entity.name)}/${tr.f_v($relation.childEntity.name)}.php" "${tr.Fv($relation.childEntity.namePlural)} ${tr.Fv($relation.name)}")
+					</label>
+<?php
+	if (!$formsInTable) {
+?>
+<?php
+	} else {
+?>
+	</td><td>
+<?php
+	}
+?>
+					<span align="left" nowrap>
+<?php
+			$parent${tr.FV($secondParentRelation.parentEntity.name)} = new ${tr.f_v($application.name)}\virgo${tr.FV($secondParentRelation.parentEntity.name)}();
+			$whereList = "";
+			$results${tr.FV($secondParentRelation.parentEntity.name)} = $parent${tr.FV($secondParentRelation.parentEntity.name)}->getVirgoList($whereList);
+			$currentConnections = $result${tr.FV($entity.name)}->get${tr.FV($weakEntityRelation.childEntity.namePlural)}${tr.FV($weakEntityRelation.name)}();
+			$currentIds = array();
+			foreach ($currentConnections as $currentConnection) {
+				$currentIds[] = $currentConnection->get${tr.FV($secondParentRelation.parentEntity.name)}${tr.FV($secondParentRelation.name)}Id();
+			}
+#if ($mode == 'create')
+			$defaultParents = PN('create_default_values_${tr.f_v($secondParentRelation.parentEntity.namePlural)}${tr.f_v($relation.name)}');
+			$currentIds = array_merge($currentIds, $defaultParents);
+#end
+?>
+<?php
+	$inputMethod = P('n_m_children_input_${tr.f_v($relation.childEntity.name)}_${tr.f_v($relation.name)}', "select");
+	if (is_null($inputMethod) || trim($inputMethod) == "") {
+		$inputMethod = "select";
+	}
+	if ($inputMethod == "select") {
+?>
+						<select 
+							class="inputbox" 
+							id="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>[]" 
+							name="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>[]" 
+							multiple 
+							size=<?php echo sizeof($results${tr.FV($secondParentRelation.parentEntity.name)}) > 10 ? 10 : sizeof($results${tr.FV($secondParentRelation.parentEntity.name)}) ?>
+<?php
+	if (isset($tabIndex) && $tabIndex > 0) {
+?>
+							tabindex="<?php echo $tabIndex ?>"
+<?php
+	}
+?>
+						>
+<?php
+			while (list($id, $label) = each($results${tr.FV($secondParentRelation.parentEntity.name)})) {
+?>
+							<option 
+								value="<?php echo $id ?>"
+								<?php echo in_array($id, $currentIds) ? "selected" : "" ?> 
+							><?php echo $label ?></option>
+<?php
+			}
+?>
+						</select>
+<?php
+	} elseif ($inputMethod == "checkbox") {
+?>
+						<ul>
+<?php
+			reset($results${tr.FV($secondParentRelation.parentEntity.name)});
+			while (list($id, $label) = each($results${tr.FV($secondParentRelation.parentEntity.name)})) {
+?>
+							<li class="parent_selection">
+								<input 
+									type="checkbox"
+									class="inputbox checkbox"
+									id="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>[]" 
+									name="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>[]" 
+									value="<?php echo $id ?>"
+									<?php echo in_array($id, $currentIds) ? "checked" : "" ?>
+								>
+								<span class="multilabel"><?php echo $label ?></span>
+							</li>
+<?php
+			}
+?>
+						</ul>
+<?php
+	} 
+?>
+					</span>
+<?php
+	if (!$formsInTable) {
+?>
+	</li>
+<?php
+	} else {
+?>
+	</td></tr>
+<?php
+	}
+?>
+#end
+#end
+<?php
+	} else {
+#if ($relation.childEntity.weak)
+#findSecondParentForNMRelation()
+#if ($secondParentRelation)
+#if ($mode == 'create')
+	$defaultParents = PN('create_default_values_${tr.f_v($secondParentRelation.parentEntity.namePlural)}${tr.f_v($relation.name)}');
+	foreach ($defaultParents as $defaultParent) {
+?>
+		<input type="hidden" name="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_[]" value="<?php echo $defaultParent ?>"/>
+<?php	
+	}
+#else
+?>
+					<input 
+						type="hidden" 
+						id="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>" 
+						name="${tr.fV($entity.prefix)}_${tr.fV($relation.childEntity.name)}${tr.FV($relation.name)}_<?php echo $result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id ?>" 
+						value="VIRGO_DONT_DELETE_N_M_CHILDREN"
+					/>
+
+
+<?php					
+#end
+#end
+#end
+	}
+?>
+#end
+#end

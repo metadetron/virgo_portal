@@ -1,0 +1,11 @@
+## <?php
+			if (!is_null($this->${entity.prefix}_${tr.f_v($property.name)}) && trim($this->${entity.prefix}_${tr.f_v($property.name)}) != "") {
+				preg_match('/^(\d\d\d\d)-(\d\d)-(\d\d)$/i', $this->${entity.prefix}_${tr.f_v($property.name)}, $matches);
+				if (sizeof($matches) != 4) {
+					return T('INCORRECT_DATE', '${tr.F_V($property.name)}');
+				}
+				if (!checkdate((int)$matches[2], (int)$matches[3], (int)$matches[1])) {
+					return T('INCORRECT_DATE', '${tr.F_V($property.name)}');
+				}
+			}
+## ?>

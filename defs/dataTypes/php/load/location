@@ -1,0 +1,2 @@
+$this->${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_location_lat = $row['${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_location_lat'];
+$this->${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_location_long = $row['${tr.fV($entity.prefix)}_${tr.f_v($property.name)}_location_long'];

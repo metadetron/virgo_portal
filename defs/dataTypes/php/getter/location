@@ -1,0 +1,4 @@
+			return array(
+				'lat' => $this->${entity.prefix}_${tr.f_v($property.name)}_location_lat, 
+				'long' => $this->${entity.prefix}_${tr.f_v($property.name)}_location_long
+			);

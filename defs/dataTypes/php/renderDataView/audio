@@ -1,0 +1,16 @@
+<?php
+	if (isset($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_id) && isset($result${tr.FV($entity.name)}->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) { 
+		$rowId = $result${tr.FV($property.entity.name)}->getId();
+		$songUrl = $_SESSION['portal_url'] . "?virgo_media=true&virgo_media_type=audio&virgo_media_table_name=${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}&virgo_media_table_prefix=${tr.f_v($entity.prefix)}&virgo_media_property_name=${tr.f_v($property.name)}&virgo_media_row_id=" . $rowId . "&" . getTokenName($rowId) . "=" . getTokenValue($rowId);
+		$songUrl = urlencode($songUrl);
+?>
+		<object menu="false" type="application/x-shockwave-flash" data="<?php echo $_SESSION['portal_url'] ?>/libraries/musicplayer/musicplayer.swf?b_bgcolor=333333&b_fgcolor=CCCCCC&song_url=<?php echo $songUrl ?>" width="17" height="17" class="inputbox readonly">
+			<param name="movie" value="<?php echo $_SESSION['portal_url'] ?>/libraries/musicplayer/musicplayer.swf?b_bgcolor=333333&b_fgcolor=CCCCCC&song_url=<?php echo $songUrl ?>" />
+			<img src="noflash.gif" width="17" height="17" alt="" />
+			<param name="wmode" value="transparent" />
+			<param name="menu" value="false" />
+		</object>
+<?php
+	} 
+?>
+

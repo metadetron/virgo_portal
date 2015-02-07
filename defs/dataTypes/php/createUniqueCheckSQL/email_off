@@ -1,0 +1,2 @@
+		$uniqnessWhere = $uniqnessWhere . " AND UPPER(${entity.prefix}_${tr.f_v($property.name)}) = UPPER('" . (/* get_magic_quotes_gpc() */ false ? $this->${entity.prefix}_${tr.f_v($property.name)} : QE($this->${entity.prefix}_${tr.f_v($property.name)})) . "') ";
+

@@ -1,0 +1,4 @@
+			$condition = $dataTypeCriteria["default"];
+			if (!is_null($condition) && trim($condition) != "") { 
+				$renderCriteria = $condition;
+			}

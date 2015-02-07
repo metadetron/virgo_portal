@@ -1,0 +1,19 @@
+						<input 
+							type="text"
+							class="inputbox" 
+							id="virgo_search_${tr.fV($property.name)}" 
+							name="virgo_search_${tr.fV($property.name)}"
+							style="border: yellow 1 solid;" 
+#if ($maxSize && $maxsize > 0)
+							maxlength="$maxSize"
+#if ($maxSize < 50)
+							size="$maxSize" 
+#else
+							size="50" 
+#end
+#else
+							size="50" 
+#end
+							value="<?php echo isset($dataTypeCriteria["default"]) ? htmlentities($dataTypeCriteria["default"], ENT_QUOTES, "UTF-8") : "" ?>" 
+						>
+

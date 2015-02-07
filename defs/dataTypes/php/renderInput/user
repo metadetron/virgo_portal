@@ -1,0 +1,24 @@
+<select 
+	class="inputbox #if ($property.obligatory) obligatory #end" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+>
+#if (!$property.obligatory)
+<?php
+	$selected = ($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() == "" ? "selected='selected'" : "")
+?>
+<option value="" <?php echo $selected ?>></option>
+#end
+<?php
+	$user = new virgoUser();
+	$userWhere = null;
+#parseFile("modules_project/customUserListLimit/${tr.f_v($entity.name)}/${tr.f_v($property.name)}.php")	
+	$res = $user->getVirgoList($userWhere); ## tu powinny byc role ograniczone, a nie ze adminow tez wybiera
+	while(list($id, $label)=each($res)) {
+		$selected = ($result${tr.FV($property.entity.name)}->get${tr.FV($property.name)}() == $id ? "selected='selected'" : "")
+?>
+	<option value="<?php echo $id ?>" <?php echo $selected ?>><?php echo $label ?></option>
+<?php	
+	}
+?>
+</select>

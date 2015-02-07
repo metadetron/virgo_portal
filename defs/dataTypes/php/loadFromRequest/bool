@@ -1,0 +1,16 @@
+#getParamValue($property.customProperty "Binary")
+#if ($virgoWartosc != "")
+#set ($binary = $virgoWartosc)
+#end
+#if ($binary == "1")
+	$tmpValue = null;
+	$tmpValue = R('${tr.fV($entity.prefix)}_${tr.fV($property.name)}_' . $this->${entity.prefix}_id);	
+	if ($tmpValue == "on") {
+			$this->${entity.prefix}_${tr.f_v($property.name)} = 1;
+	} else {
+			$this->${entity.prefix}_${tr.f_v($property.name)} = null;
+	}
+#else
+#parseFile("defs/loadFromRequest.php")
+#end
+

@@ -1,0 +1,25 @@
+## <?php
+##		if (!is_array($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) { to jest w image ale po co?
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_blob)) {
+				$query .= " ? ,";
+				$types .= "b";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)_virgo_blob};
+			} else {
+				$query .= " NULL ,";				
+			}
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_file_name) {
+				$query .= " ? ,";
+				$types .= "s";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)_virgo_file_name};
+			} else {
+				$query .= " NULL ,";				
+			}
+			if (isset($this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)}_virgo_size)) {
+				$query .= " ? ,";
+				$types .= "i";
+				$values[] = $this->${tr.f_v($entity.prefix)}_${tr.f_v($property.name)_virgo_size};
+			} else {
+				$query .= " NULL ,";				
+			}
+##		}
+## ?>

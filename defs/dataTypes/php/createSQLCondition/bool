@@ -1,0 +1,6 @@
+		$condition = $dataTypeCriteria["default"];
+		if (!is_null($condition) && trim($condition) != "") {
+			$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} = ? ";
+			$types .= "i";
+			$values[] = $condition;							
+		}

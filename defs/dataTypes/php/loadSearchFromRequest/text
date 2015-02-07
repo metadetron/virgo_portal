@@ -1,0 +1,2 @@
+		$dataTypeCriteria["default"] = R('virgo_search_${tr.fV($property.name)}');
+

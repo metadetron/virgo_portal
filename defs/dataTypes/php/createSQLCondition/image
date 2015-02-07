@@ -1,0 +1,1 @@
+##		$filter = $filter . " AND ${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}.${tr.f_v($entity.prefix)}_${tr.f_v($property.name)} like '" . QE($dataTypeCriteria["default"]) . "' ";

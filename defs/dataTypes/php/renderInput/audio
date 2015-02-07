@@ -1,0 +1,33 @@
+<?php
+	if (isset($result${tr.FV($property.entity.name)}->getId()) && isset($result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_virgo_blob) && $result${tr.FV($property.entity.name)}->${tr.f_v($property.entity.prefix)}_${tr.f_v($property.name)}_virgo_blob[0] != 1) { 
+		$rowId = $result${tr.FV($property.entity.name)}->getId();
+		$songUrl = $_SESSION['portal_url'] . "?virgo_media=true&virgo_media_type=audio&virgo_media_table_name=${tr.f_v($application.prefix)}_${tr.f_v($entity.namePlural)}&virgo_media_table_prefix=${tr.f_v($entity.prefix)}&virgo_media_property_name=${tr.f_v($property.name)}&virgo_media_row_id=" . $rowId . "&" . getTokenName($rowId) . "=" . getTokenValue($rowId);
+		$songUrl = urlencode($songUrl);
+?>
+		<object type="application/x-shockwave-flash" data="<?php echo $_SESSION['portal_url'] ?>/libraries/musicplayer/musicplayer.swf?b_bgcolor=333333&b_fgcolor=CCCCCC&song_url=<?php echo $songUrl ?>" width="17" height="17">
+			<param name="movie" value="<?php echo $_SESSION['portal_url'] ?>/libraries/musicplayer/musicplayer.swf?b_bgcolor=333333&b_fgcolor=CCCCCC&song_url=<?php echo $songUrl ?>" />
+			<img src="noflash.gif" width="17" height="17" alt="" />
+			<param name="wmode" value="transparent" />
+		</object>
+<input type="checkbox" 
+	style="border: yellow 1 solid;" 
+	class="inputbox checkbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_virgo_image_deleted_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.name)}_virgo_image_deleted_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	onchange="this.form.virgo_changed.value='T'"
+/>Delete<br/>
+<input type="hidden" name="${tr.fV($property.name)}_virgo_image_present_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" id="${tr.fV($property.name)}_virgo_image_present_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" value="true"/>
+<?php
+	} 
+?>
+<input type="file" 
+	style="border: yellow 1 solid;" 
+	class="inputbox" 
+	id="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>" 
+	name="${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>"
+	onchange="this.form.virgo_changed.value='T'"
+/>
+#if (!$firstFieldName || $firstFieldName == "")
+#set ($firstFieldName = "${tr.fV($property.entity.prefix)}_${tr.fV($property.name)}_virgo_image_deleted_<?php echo $result${tr.FV($property.entity.name)}->getId() ?>")
+#end
+

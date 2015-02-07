@@ -1,0 +1,3 @@
+		$dataTypeCriteria["from"] = R('virgo_search_${tr.fV($property.name)}_from');
+		$dataTypeCriteria["to"] = R('virgo_search_${tr.fV($property.name)}_to');
+
